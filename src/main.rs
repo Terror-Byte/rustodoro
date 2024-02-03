@@ -37,26 +37,27 @@ struct ArgumentPair {
 
 fn main() {
     let args: Vec<String> = env::args().collect();
+    let mut time_in_secs = 0;
 
+    // Put this in its own function?
     match args.len() {
         0 | 1 => println!("Too few arguments supplied."),
         2 => { // expect seconds as int
             match &args[1].parse::<u64>() {
-                Ok(n) => run_timer(*n),
+                Ok(n) => time_in_secs += *n,
                 Err(e) => println!("Failed to parse argument as integer! Error: {}", e),
             }
         }, 
         3 => { // expect --seconds flag and int
-            let parsed_args = parse_args(&args[1], &args[2]);
-            match parsed_args {
-                Ok(a) => {
-                    match a.option {
-                        TimeOption::Seconds => run_timer(a.value),
-                        TimeOption::Minutes => run_timer(a.value*60),
-                    }
+            let parsed_args_result = parse_args(&args[1], &args[2]);
+            let parsed_args = match parsed_args_result {
+                Ok(a) => a,
+                Err(e) => {
+                    println!("{}", e);
+                    return;
                 },
-                Err(e) => println!("{}", e),
-            }
+            };
+            time_in_secs += convert_args_to_seconds(parsed_args);
         },
         5 => { // expect --seconds flag followed by int and --minutes flag followed by int. Doesn't matter if --seconds or --minutes comes first
             // Replace this with unwrap, maybe?
@@ -84,21 +85,13 @@ fn main() {
                 return;
             }
 
-            let mut time_in_secs: u64 = 0;
-            match parsed_args_first.option {
-                TimeOption::Seconds => time_in_secs += parsed_args_first.value,
-                TimeOption::Minutes => time_in_secs += parsed_args_first.value * 60,
-            }
-
-            match parsed_args_second.option {
-                TimeOption::Seconds => time_in_secs += parsed_args_second.value,
-                TimeOption::Minutes => time_in_secs += parsed_args_second.value * 60,
-            }
-
-            run_timer(time_in_secs);
+            time_in_secs += convert_args_to_seconds(parsed_args_first);
+            time_in_secs += convert_args_to_seconds(parsed_args_second);
         },
         _ => println!("Too many arguments supplied."),
     }
+
+    run_timer(time_in_secs);
 }
 
 fn parse_args(option: &String, value: &String) -> Result<ArgumentPair, &'static str> {
@@ -114,6 +107,13 @@ fn parse_args(option: &String, value: &String) -> Result<ArgumentPair, &'static 
     };
 
     Ok(ArgumentPair{ option: parsed_option, value: parsed_value })
+}
+
+fn convert_args_to_seconds(args: ArgumentPair) -> u64 {
+    match args.option {
+        TimeOption::Seconds => args.value,
+        TimeOption::Minutes => args.value * 60,
+    }
 }
 
 fn run_timer(time_in_secs: u64) {
