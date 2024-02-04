@@ -30,9 +30,35 @@ enum TimeOption {
     Minutes,
 }
 
+// What stuff can I add as methods here? Do it so I can just chain functions?
+// Parse Args and Convert Args to Seconds? Could make static ones?
 struct ArgumentPair {
     option: TimeOption,
     value: u64,
+}
+
+impl ArgumentPair {
+    fn parse_args(option: &String, value: &String) -> Result<ArgumentPair, &'static str> {
+        let parsed_option = match option.to_lowercase().as_str() {
+            SECONDS_FLAG_LONG | SECONDS_FLAG_SHORT => TimeOption::Seconds,
+            MINUTES_FLAG_LONG | MINUTES_FLAG_SHORT => TimeOption::Minutes,
+            _ => return Err("Unrecognised flag."),
+        };
+    
+        let parsed_value = match value.parse::<u64>() {
+            Ok(n) => n,
+            Err(_) => return Err("Couldn't parse value as integer."),
+        };
+    
+        Ok(ArgumentPair{ option: parsed_option, value: parsed_value })
+    }
+
+    fn get_seconds(&self) -> u64 {
+        match self.option {
+            TimeOption::Seconds => self.value,
+            TimeOption::Minutes => self.value * 60,
+        }
+    }
 }
 
 fn main() {
@@ -49,7 +75,7 @@ fn main() {
             }
         }, 
         3 => { // expect --seconds flag and int
-            let parsed_args_result = parse_args(&args[1], &args[2]);
+            let parsed_args_result = ArgumentPair::parse_args(&args[1], &args[2]);
             let parsed_args = match parsed_args_result {
                 Ok(a) => a,
                 Err(e) => {
@@ -57,11 +83,11 @@ fn main() {
                     return;
                 },
             };
-            time_in_secs += convert_args_to_seconds(parsed_args);
+            time_in_secs += parsed_args.get_seconds();
         },
         5 => { // expect --seconds flag followed by int and --minutes flag followed by int. Doesn't matter if --seconds or --minutes comes first
             // Replace this with unwrap, maybe?
-            let parsed_args_first_result = parse_args(&args[1], &args[2]);
+            let parsed_args_first_result = ArgumentPair::parse_args(&args[1], &args[2]);
             let parsed_args_first = match parsed_args_first_result {
                 Ok(a) => a,
                 Err(e) => {
@@ -70,7 +96,7 @@ fn main() {
                 }
             };
 
-            let parsed_args_second_result= parse_args(&args[3], &args[4]);
+            let parsed_args_second_result= ArgumentPair::parse_args(&args[3], &args[4]);
             let parsed_args_second = match parsed_args_second_result {
                 Ok(a) => a,
                 Err(e) => {
@@ -85,35 +111,13 @@ fn main() {
                 return;
             }
 
-            time_in_secs += convert_args_to_seconds(parsed_args_first);
-            time_in_secs += convert_args_to_seconds(parsed_args_second);
+            time_in_secs += parsed_args_first.get_seconds();
+            time_in_secs += parsed_args_second.get_seconds();
         },
         _ => println!("Too many arguments supplied."),
     }
 
     run_timer(time_in_secs);
-}
-
-fn parse_args(option: &String, value: &String) -> Result<ArgumentPair, &'static str> {
-    let parsed_option = match option.to_lowercase().as_str() {
-        SECONDS_FLAG_LONG | SECONDS_FLAG_SHORT => TimeOption::Seconds,
-        MINUTES_FLAG_LONG | MINUTES_FLAG_SHORT => TimeOption::Minutes,
-        _ => return Err("Unrecognised flag."),
-    };
-
-    let parsed_value = match value.parse::<u64>() {
-        Ok(n) => n,
-        Err(_) => return Err("Couldn't parse value as integer."),
-    };
-
-    Ok(ArgumentPair{ option: parsed_option, value: parsed_value })
-}
-
-fn convert_args_to_seconds(args: ArgumentPair) -> u64 {
-    match args.option {
-        TimeOption::Seconds => args.value,
-        TimeOption::Minutes => args.value * 60,
-    }
 }
 
 fn run_timer(time_in_secs: u64) {
