@@ -1,4 +1,5 @@
 work_time = 60
 short_break_time = 15
 long_break_time = 30
-display_secs = true
+pomodoros_till_long_break = 4
+display_in_secs = true

@@ -29,12 +29,18 @@ Do we want to save completed timer things to a file?
 What do we want to load from a config? (json, yaml, toml even?)
 We want these to be configurable from the commandline too!
 
+rustodoro <- just run the work timer if we do this?
+rustodoro --work
+rustodoro --short-break
+rustodoro --long-break
 rustodoro --set-work-time --minutes 25
 rustodoro --set-work-time --seconds 1500
 rustodoro --set-short-break-time --minutes 5
 rustodoro --set-short-break-time --seconds 300
 rustodoro --set-long-break-time --minutes 15
 rustodoro --set-long-break-time --seconds 900
+rustodoro --set-pomodoros-till-long-break 4
+rustodoro --set-display-in-secs true (if true, display timer in seconds. Otherwise, display in minutes)
 
 VIM Note: This is early days, Liam! There's going to be some teething issues/friction initially but you're going to learn as you go. You got this! You can learn this!
 
@@ -55,3 +61,14 @@ WAIT, I have this the wrong way round.
 
 Add in commands to configure!
 When we finish a work stint, print out that we can have a break now + how many work stints we've taken?
+
+https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
+
+1 arg: no arguments passed (first arg is the binary name).
+2 args: --work, --short-break, --long break, --help. If none of these, exit out cause unrecognised.
+3 or 4 args: --set-work-time, --set-short-break-time, --set-long-break-time, --set-pomodoros-to-long-break, --set-display-in-secs
+
+--help -> what info do I want displaying?
+SET NERD FONT.
+
+Maybe find a crate to handle this at some point? Figuring it out myself is fun for now though!
