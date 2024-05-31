@@ -86,30 +86,6 @@ fn run_timer(time_in_secs: u64) {
 
 }
 
-// fn print_time_remaining(time_remaining: u64, total_time: u64) {
-//     print!("{esc}c", esc = 27 as char); // Hacky way of clearing the console! https://stackoverflow.com/questions/34837011/how-to-clear-the-terminal-screen-in-rust-after-a-new-line-is-printed 
-//     println!("{} seconds to go.", time_remaining); // Do this in mins? Allow use to config!
-
-//     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
-//     let mut progress_bar: String = String::new();
-//     let progress_amount = percentage/10;
-//     let space_amount = 10 - progress_amount;
-    
-//     if progress_amount > 0 {
-//         for _i in 0..progress_amount {
-//             progress_bar += "=";
-//         }
-//     }
-
-//     if space_amount > 0 {
-//         for _i in 0..space_amount {
-//             progress_bar += " ";
-//         }
-//     }
-
-//     println!("[{}] {}%", progress_bar.green(), percentage);
-// }
-
 fn print_time_remaining(time_remaining: u64, total_time: u64) -> Result<(), std::io::Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
@@ -129,12 +105,6 @@ fn print_time_remaining(time_remaining: u64, total_time: u64) -> Result<(), std:
     }
 
     let mut stdout = stdout();
-    // stdout.queue(style::PrintStyledContent(format!("{} seconds to go.", time_remaining).white()))?;
-    // stdout
-    //   .queue(Clear(crossterm::terminal::ClearType::All))
-    //   .queue(style::PrintStyledContent("Boop".white()));
-    // queue!(stdout, Clear(ClearType::All), cursor::MoveTo(0, 0), style::Print("Test!"))?;
-    // queue!(stdout, cursor::MoveTo(0, 0), style::Print(format!("{} seconds to go.", time_remaining)), Clear(ClearType::FromCursorDown))?;
     queue!(
         stdout,
         cursor::MoveTo(0, 0),
