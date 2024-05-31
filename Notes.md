@@ -72,3 +72,9 @@ https://doc.rust-lang.org/book/ch12-01-accepting-command-line-arguments.html
 SET NERD FONT.
 
 Maybe find a crate to handle this at some point? Figuring it out myself is fun for now though!
+Add crossterm and use that to clear the terminal!
+
+Current task:
+- Implement Crossterm.
+
+Do I want a heading to show if this is a work timer or a break timer?
