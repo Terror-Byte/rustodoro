@@ -93,3 +93,4 @@ Do I want to add in timer restarting (when user presses r) and pausing (when use
 Put timer running in a function! Does it know what timer is running, or does it just run the timer?
 
 TODO: If config not found, create new one?
+TODO: Add in saving how many work stints so we know when do do our short/long breaks!

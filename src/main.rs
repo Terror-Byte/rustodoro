@@ -45,45 +45,31 @@ fn main() -> Result<(), std::io::Error> {
     // Is the user starting a work timer, a short/long break timer, modifying their config?     
 
     let args: Vec<String> = env::args().collect();
-    match args.len() {
-        2 => (),
-        3 => (),
-        4 => (),
-        _ => {
-            println!("Too few or too many arguments supplied! Pass --help argument to see possible options.");
-            return Ok(());
-        },
+    // match args.len() {
+    //     2 => (),
+    //     3 => (),
+    //     4 => (),
+    //     _ => {
+    //         println!("Too few or too many arguments supplied! Pass --help argument to see possible options.");
+    //         return Ok(());
+    //     },
+    // }
+    if args.len() != 2 {
+        println!("Incorrect number of arguments supplied! Pass --help argument to see possible options.");
+        return Ok(());
     }
 
-    // Work Timer (TODO: Put this in its own function! Can be reused for break timer too.)
-    // let start = Instant::now();
-    // print_time_remaining(config.work_time, config.work_time)?;
+    let timer_type = match args[1].as_str() {
+        WORK_FLAG => TimerType::Work,
+        SHORT_BREAK_FLAG => TimerType::ShortBreak,
+        LONG_BREAK_FLAG => TimerType::LongBreak,
+        _ => {
+            println!("Unrecognised argument supplied! Pass --help argument to see possible options.");
+            return Ok(());
+        }
+    };
 
-    // let mut old_printed_value: u64 = 0;
-    // loop {
-    //     let elapsed_seconds = start.elapsed().as_secs();
-
-    //     if elapsed_seconds > old_printed_value {
-    //         let time_remaining = config.work_time - elapsed_seconds;
-    //         print_time_remaining(time_remaining, config.work_time)?;
-    //         old_printed_value = elapsed_seconds;
-    //     }
-
-    //     if elapsed_seconds >= config.work_time {
-    //         break;
-    //     }
-    // }
-    
-    // //println!("Timer elapsed!");
-    // // TODO: Save to file that we've done another work/break stint. Do we want to save logs per day? That might be best!
-    // // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
-    // let mut stdout = stdout();
-    // queue!(
-    //     stdout,
-    //     cursor::MoveTo(0, 2),
-    //     style::Print("Timer elapsed!")
-    // )?;
-    run_timer(config, TimerType::Work)?; // TODO: Enum for this? Work time, short break, long break?
+    run_timer(config, timer_type)?; // TODO: Enum for this? Work time, short break, long break?
     Ok(())
 }
 
