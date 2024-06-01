@@ -91,3 +91,5 @@ time ones: just secs, just mins, mins and secs??
 Do I want to add in timer restarting (when user presses r) and pausing (when user presses space?). May need to do the timer in a different thread in that case? Will have a thread updating the timer + printing to the console and a thread listening for input? Maybe cache the input and react to it next update of the main thread?
 
 Put timer running in a function! Does it know what timer is running, or does it just run the timer?
+
+TODO: If config not found, create new one?

@@ -119,7 +119,8 @@ fn run_timer(config: Config, timer_type: TimerType) -> Result<(), std::io::Error
     queue!(
         stdout,
         cursor::MoveToNextLine(1),
-        style::Print("Timer elapsed!")
+        style::Print("Timer elapsed!"),
+        cursor::Show
     )?;
     Ok(())
 }
@@ -153,6 +154,7 @@ fn print_time_remaining(time_remaining: u64, total_time: u64, timer_type: TimerT
         stdout,
         cursor::MoveTo(0, 0),
         Clear(ClearType::FromCursorDown),
+        cursor::Hide,
         style::Print(header),
         cursor::MoveToNextLine(1),
         style::Print(format!("{} seconds to go.", time_remaining)),
