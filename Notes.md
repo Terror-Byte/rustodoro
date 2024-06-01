@@ -94,3 +94,5 @@ Put timer running in a function! Does it know what timer is running, or does it 
 
 TODO: If config not found, create new one?
 TODO: Add in saving how many work stints so we know when do do our short/long breaks!
+
+How do we want to tell if we're running the timer or configuring, based on the arguments?
