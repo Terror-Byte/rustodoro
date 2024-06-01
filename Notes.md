@@ -78,3 +78,16 @@ Current task:
 - Implement Crossterm.
 
 Do I want a heading to show if this is a work timer or a break timer?
+
+How to print in mins + secs? Divide by 60?
+Take the int part of that and then how do we get the rest of the number?
+
+View commands in a tree-like structure? Different possibilities!
+
+work (no args), short-break (no args?), long-break (no args?), help (no args), set-work-time (1 or 2 args?), set-short-break-time (1 or 2 args?), set-long-break-time (1 or 2 args?), set-pomodoros-till-break (1 arg)
+
+time ones: just secs, just mins, mins and secs??
+
+Do I want to add in timer restarting (when user presses r) and pausing (when user presses space?). May need to do the timer in a different thread in that case? Will have a thread updating the timer + printing to the console and a thread listening for input? Maybe cache the input and react to it next update of the main thread?
+
+Put timer running in a function! Does it know what timer is running, or does it just run the timer?

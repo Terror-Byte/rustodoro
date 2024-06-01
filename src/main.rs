@@ -1,11 +1,8 @@
-use std::io;
 use std::io::stdout;
-use std::io::Stdout;
 use std::io::Write;
 use std::time::Instant;
 use crossterm::queue;
 use crossterm::style;
-use crossterm::QueueableCommand;
 use serde::Serialize;
 use serde::Deserialize;
 use std::fs;
@@ -21,6 +18,13 @@ struct Config {
     long_break_time: u64,
     pomodoros_till_long_break: u64,
     display_in_secs: bool,
+}
+
+#[derive(Copy, Clone)]
+enum TimerType {
+    Work,
+    ShortBreak,
+    LongBreak,
 }
 
 const CONFIG_PATH: &str = "./Config.toml";
@@ -52,41 +56,75 @@ fn main() -> Result<(), std::io::Error> {
     }
 
     // Work Timer (TODO: Put this in its own function! Can be reused for break timer too.)
+    // let start = Instant::now();
+    // print_time_remaining(config.work_time, config.work_time)?;
+
+    // let mut old_printed_value: u64 = 0;
+    // loop {
+    //     let elapsed_seconds = start.elapsed().as_secs();
+
+    //     if elapsed_seconds > old_printed_value {
+    //         let time_remaining = config.work_time - elapsed_seconds;
+    //         print_time_remaining(time_remaining, config.work_time)?;
+    //         old_printed_value = elapsed_seconds;
+    //     }
+
+    //     if elapsed_seconds >= config.work_time {
+    //         break;
+    //     }
+    // }
+    
+    // //println!("Timer elapsed!");
+    // // TODO: Save to file that we've done another work/break stint. Do we want to save logs per day? That might be best!
+    // // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
+    // let mut stdout = stdout();
+    // queue!(
+    //     stdout,
+    //     cursor::MoveTo(0, 2),
+    //     style::Print("Timer elapsed!")
+    // )?;
+    run_timer(config, TimerType::Work)?; // TODO: Enum for this? Work time, short break, long break?
+    Ok(())
+}
+
+// TODO: Can we make the config global? How do we tell it which timer to run? Does it need to know which one? Do we want to print out which timer is running?
+fn run_timer(config: Config, timer_type: TimerType) -> Result<(), std::io::Error> {
+    let time = match timer_type {
+        TimerType::Work => config.work_time,
+        TimerType::ShortBreak => config.short_break_time,
+        TimerType::LongBreak => config.long_break_time
+    };
+
     let start = Instant::now();
-    print_time_remaining(config.work_time, config.work_time)?;
+    print_time_remaining(time, time, timer_type)?;
 
     let mut old_printed_value: u64 = 0;
     loop {
         let elapsed_seconds = start.elapsed().as_secs();
 
         if elapsed_seconds > old_printed_value {
-            let time_remaining = config.work_time - elapsed_seconds;
-            print_time_remaining(time_remaining, config.work_time)?;
+            let time_remaining = time - elapsed_seconds;
+            print_time_remaining(time_remaining, time, timer_type)?;
             old_printed_value = elapsed_seconds;
         }
 
-        if elapsed_seconds >= config.work_time {
+        if elapsed_seconds >= time {
             break;
         }
     }
     
-    //println!("Timer elapsed!");
     // TODO: Save to file that we've done another work/break stint. Do we want to save logs per day? That might be best!
     // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
     let mut stdout = stdout();
     queue!(
         stdout,
-        cursor::MoveTo(0, 2),
+        cursor::MoveToNextLine(1),
         style::Print("Timer elapsed!")
     )?;
     Ok(())
 }
 
-fn run_timer(time_in_secs: u64) {
-
-}
-
-fn print_time_remaining(time_remaining: u64, total_time: u64) -> Result<(), std::io::Error> {
+fn print_time_remaining(time_remaining: u64, total_time: u64, timer_type: TimerType) -> Result<(), std::io::Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
     let progress_amount = percentage/10;
@@ -104,13 +142,21 @@ fn print_time_remaining(time_remaining: u64, total_time: u64) -> Result<(), std:
         }
     }
 
+    let header = match timer_type {
+        TimerType::Work => String::from("Work Timer"),
+        TimerType::ShortBreak => String::from("Short Break Timer"),
+        TimerType::LongBreak => String::from("Long Break Timer")
+    };
+
     let mut stdout = stdout();
     queue!(
         stdout,
         cursor::MoveTo(0, 0),
         Clear(ClearType::FromCursorDown),
+        style::Print(header),
+        cursor::MoveToNextLine(1),
         style::Print(format!("{} seconds to go.", time_remaining)),
-        cursor::MoveTo(0, 1),
+        cursor::MoveToNextLine(1),
         style::Print("["),
         style::PrintStyledContent(progress_bar.with(Color::Green)),
         style::Print(format!("] {}%", percentage))
