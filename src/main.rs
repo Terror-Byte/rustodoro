@@ -2,8 +2,10 @@ mod args;
 mod config;
 mod timer;
 
-use args::RustodoroArgs;
-use args::RustodoroCommand;
+use args::{
+    RustodoroArgs,
+    RustodoroCommand
+};
 use clap::Parser;
 use config::Config;
 use timer::{

@@ -1,5 +1,7 @@
-use serde::Serialize;
-use serde::Deserialize;
+use serde::{
+    Serialize,
+    Deserialize
+};
 use std::fs;
 
 // TODO: Do we want the config to be aware of its own path?

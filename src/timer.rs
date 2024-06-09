@@ -1,16 +1,18 @@
 use std::io::stdout;
 use std::io::Write;
 use std::time::Instant;
-use crossterm::queue;
-use crossterm::style;
-use crossterm::terminal::{ 
-    Clear, 
-    ClearType 
-};
-use crossterm::cursor;
-use crossterm::style::{ 
-    Color, 
-    Stylize 
+use crossterm::{
+    queue,
+    cursor,
+    style,
+    style::{
+        Color,
+        Stylize
+    },
+    terminal::{
+        Clear,
+        ClearType
+    }
 };
 
 #[derive(Copy, Clone)]
