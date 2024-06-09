@@ -26,20 +26,20 @@ pub enum RustodoroCommand {
     LongBreak,
 
     /// Configure the work timer
-    SetWorkTimer(SetWorkTimerCommand),
+    SetWorkTime(SetWorkTimeCommand),
 
     /// Configure the short break timer
-    SetShortBreakTimer(SetShortBreakTimerCommand),
+    SetShortBreakTime(SetShortBreakTimeCommand),
 
     /// Configure the long break timer
-    SetLongBreakTimer(SetLongBreakTimerCommand),
+    SetLongBreakTime(SetLongBreakTimeCommand),
 
     /// Configure the amount of pomodoros (work stints) to complete for a long break
     SetPomodorosToLongBreak(SetPomodorosToLongBreakCommand),
 }
 
 #[derive(Debug, Args)]
-pub struct SetWorkTimerCommand {
+pub struct SetWorkTimeCommand {
     /// Minutes component of the work timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
@@ -50,7 +50,7 @@ pub struct SetWorkTimerCommand {
 }
 
 #[derive(Debug, Args)]
-pub struct SetShortBreakTimerCommand {
+pub struct SetShortBreakTimeCommand {
     /// Minutes component of the short break timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
@@ -61,7 +61,7 @@ pub struct SetShortBreakTimerCommand {
 }
 
 #[derive(Debug, Args)]
-pub struct SetLongBreakTimerCommand {
+pub struct SetLongBreakTimeCommand {
     /// Minutes component of the long break timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
@@ -76,7 +76,7 @@ pub struct SetPomodorosToLongBreakCommand {
     pub pomodoros_to_long_break: u8,
 }
 
-impl ToSeconds for SetWorkTimerCommand {
+impl ToSeconds for SetWorkTimeCommand {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -95,7 +95,7 @@ impl ToSeconds for SetWorkTimerCommand {
     }
 }
 
-impl ToSeconds for SetShortBreakTimerCommand {
+impl ToSeconds for SetShortBreakTimeCommand {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -114,7 +114,7 @@ impl ToSeconds for SetShortBreakTimerCommand {
     }
 }
 
-impl ToSeconds for SetLongBreakTimerCommand {
+impl ToSeconds for SetLongBreakTimeCommand {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 

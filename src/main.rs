@@ -25,16 +25,16 @@ fn main() -> Result<(), std::io::Error> {
         RustodoroCommand::Work => run_timer(config.work_time, TimerType::Work)?,
         RustodoroCommand::ShortBreak => run_timer(config.short_break_time, TimerType::ShortBreak)?,
         RustodoroCommand::LongBreak => run_timer(config.long_break_time, TimerType::LongBreak)?,
-        RustodoroCommand::SetWorkTimer(command) => {
-            let new_config = config.set_work_timer(command);
+        RustodoroCommand::SetWorkTime(command) => {
+            let new_config = config.set_work_time(command);
             Config::save(&new_config, CONFIG_PATH);
         },
-        RustodoroCommand::SetShortBreakTimer(command) => {
-            let new_config = config.set_short_break_timer(command);
+        RustodoroCommand::SetShortBreakTime(command) => {
+            let new_config = config.set_short_break_time(command);
             Config::save(&new_config, CONFIG_PATH);
         },
-        RustodoroCommand::SetLongBreakTimer(command) => {
-            let new_config = config.set_long_break_timer(command);
+        RustodoroCommand::SetLongBreakTime(command) => {
+            let new_config = config.set_long_break_time(command);
             Config::save(&new_config, CONFIG_PATH);
         },
         RustodoroCommand::SetPomodorosToLongBreak(command) => {

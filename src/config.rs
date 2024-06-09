@@ -6,9 +6,9 @@ use std::fs;
 use crate::args::ToSeconds;
 
 use crate::args::{
-    SetWorkTimerCommand,
-    SetShortBreakTimerCommand,
-    SetLongBreakTimerCommand,
+    SetWorkTimeCommand,
+    SetShortBreakTimeCommand,
+    SetLongBreakTimeCommand,
     SetPomodorosToLongBreakCommand,
 };
 
@@ -42,21 +42,21 @@ impl Config {
     }
 
     // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
-    pub fn set_work_timer(self, command: SetWorkTimerCommand) -> Config {
+    pub fn set_work_time(self, command: SetWorkTimeCommand) -> Config {
         Config { 
             work_time: command.to_seconds(),
             ..self
         }
     }
 
-    pub fn set_short_break_timer(self, command: SetShortBreakTimerCommand) -> Config {
+    pub fn set_short_break_time(self, command: SetShortBreakTimeCommand) -> Config {
         Config {
             short_break_time: command.to_seconds(),
             ..self
         }
     }
 
-    pub fn set_long_break_timer(self, command: SetLongBreakTimerCommand) -> Config {
+    pub fn set_long_break_time(self, command: SetLongBreakTimeCommand) -> Config {
         Config {
             long_break_time: command.to_seconds(),
             ..self
