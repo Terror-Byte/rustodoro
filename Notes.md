@@ -96,3 +96,14 @@ TODO: If config not found, create new one?
 TODO: Add in saving how many work stints so we know when do do our short/long breaks!
 
 How do we want to tell if we're running the timer or configuring, based on the arguments?
+
+## To Do
+- Improve error handling
+ - If there's no config, create a default one!
+- Improve user feedback when setting config values
+- Add logs to keep track of the users work stints/breaks per day so we can tell the user "Hey you should have a break!". (ADD A MAX LOGS. Make this user definable? Do we delete olds ones? Max size for a daily log too?)
+- Send system notification when timer has elapsed.
+ - Make this configurable!
+- Make sound when timer has elapsed?
+- Add command to reset config to default?
+ - Reset whole thing to default OR just certain commands
