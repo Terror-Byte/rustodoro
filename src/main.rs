@@ -4,7 +4,7 @@ mod timer;
 
 use args::{
     RustodoroArgs,
-    RustodoroCommand
+    RustodoroCommand,
 };
 use clap::Parser;
 use config::Config;
@@ -29,13 +29,16 @@ fn main() -> Result<(), std::io::Error> {
             Config::save(&new_config, CONFIG_PATH);
         },
         RustodoroCommand::SetShortBreakTimer(command) => {
-            println!("{:?}", command)
+            let new_config = config.set_short_break_timer(command);
+            Config::save(&new_config, CONFIG_PATH);
         },
         RustodoroCommand::SetLongBreakTimer(command) => {
-            println!("{:?}", command)
+            let new_config = config.set_long_break_timer(command);
+            Config::save(&new_config, CONFIG_PATH);
         },
         RustodoroCommand::SetPomodorosToLongBreak(command) => {
-            println!("{:?}", command)
+            let new_config = config.set_pomodoros_to_long_break(command);
+            Config::save(&new_config, CONFIG_PATH);
         },
     }
 

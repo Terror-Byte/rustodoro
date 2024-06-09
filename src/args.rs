@@ -1,7 +1,7 @@
-use clap::{ 
-    Args, 
-    Parser, 
-    Subcommand 
+use clap::{
+    Args,
+    Parser,
+    Subcommand, 
 };
 
 #[derive(Debug, Parser)]
@@ -20,14 +20,7 @@ pub enum RustodoroCommand {
 
     /// Start a long break timer
     LongBreak,
-// use crossterm::terminal::{ 
-//     Clear, 
-//     ClearType 
-// };
-// use crossterm::style::{ 
-//     Color, 
-//     Stylize 
-// };
+
     /// Configure the work timer
     SetWorkTimer(SetWorkTimerCommand),
 

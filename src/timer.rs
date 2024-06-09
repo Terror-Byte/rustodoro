@@ -7,12 +7,12 @@ use crossterm::{
     style,
     style::{
         Color,
-        Stylize
+        Stylize,
     },
     terminal::{
         Clear,
-        ClearType
-    }
+        ClearType,
+    },
 };
 
 #[derive(Copy, Clone)]
@@ -53,6 +53,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
     Ok(())
 }
 
+// TODO: MODIFY THIS TO DISPLAY IN MINUTES + SECS AND NOT JUST SECONDS.
 fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
