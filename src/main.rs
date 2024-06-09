@@ -1,15 +1,28 @@
 use std::io::stdout;
 use std::io::Write;
 use std::time::Instant;
+use clap::Command;
 use crossterm::queue;
 use crossterm::style;
 use serde::Serialize;
 use serde::Deserialize;
 use std::fs;
 use std::env;
-use crossterm::terminal::{ Clear, ClearType };
+use crossterm::terminal::{ 
+    Clear, 
+    ClearType 
+};
 use crossterm::cursor;
-use crossterm::style::{ Color, Stylize };
+use crossterm::style::{ 
+    Color, 
+    Stylize 
+};
+
+// My modules
+mod args;
+use args::RustodoroArgs;
+use args::RustodoroCommand;
+use clap::Parser;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
@@ -44,32 +57,44 @@ fn main() -> Result<(), std::io::Error> {
     // TODO: Parse commandline args here!
     // Is the user starting a work timer, a short/long break timer, modifying their config?     
 
-    let args: Vec<String> = env::args().collect();
-    // match args.len() {
-    //     2 => (),
-    //     3 => (),
-    //     4 => (),
-    //     _ => {
-    //         println!("Too few or too many arguments supplied! Pass --help argument to see possible options.");
-    //         return Ok(());
-    //     },
+    // OLD CMD ARG PARSING
+    // let args: Vec<String> = env::args().collect();
+    // // match args.len() {
+    // //     2 => (),
+    // //     3 => (),
+    // //     4 => (),
+    // //     _ => {
+    // //         println!("Too few or too many arguments supplied! Pass --help argument to see possible options.");
+    // //         return Ok(());
+    // //     },
+    // // }
+    // if args.len() != 2 {
+    //     println!("Incorrect number of arguments supplied! Pass --help argument to see possible options.");
+    //     return Ok(());
     // }
-    if args.len() != 2 {
-        println!("Incorrect number of arguments supplied! Pass --help argument to see possible options.");
-        return Ok(());
+
+    // let timer_type = match args[1].as_str() {
+    //     WORK_FLAG => TimerType::Work,
+    //     SHORT_BREAK_FLAG => TimerType::ShortBreak,
+    //     LONG_BREAK_FLAG => TimerType::LongBreak,
+    //     _ => {
+    //         println!("Unrecognised argument supplied! Pass --help argument to see possible options.");
+    //         return Ok(());
+    //     }
+    // };
+
+    // run_timer(config, timer_type)?; // TODO: Enum for this? Work time, short break, long break?
+
+    let args: RustodoroArgs = RustodoroArgs::parse();
+    //println!("{:?}", args);
+
+    match args.command {
+        RustodoroCommand::Work => run_timer(config, TimerType::Work)?,
+        RustodoroCommand::ShortBreak => run_timer(config, TimerType::ShortBreak)?,
+        RustodoroCommand::LongBreak => run_timer(config, TimerType::LongBreak)?,
+        RustodoroCommand::SetWorkTimer(_foo) => (),
     }
 
-    let timer_type = match args[1].as_str() {
-        WORK_FLAG => TimerType::Work,
-        SHORT_BREAK_FLAG => TimerType::ShortBreak,
-        LONG_BREAK_FLAG => TimerType::LongBreak,
-        _ => {
-            println!("Unrecognised argument supplied! Pass --help argument to see possible options.");
-            return Ok(());
-        }
-    };
-
-    run_timer(config, timer_type)?; // TODO: Enum for this? Work time, short break, long break?
     Ok(())
 }
 
