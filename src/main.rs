@@ -1,13 +1,12 @@
 use std::io::stdout;
 use std::io::Write;
 use std::time::Instant;
-use clap::Command;
+use args::SetWorkTimerCommand;
 use crossterm::queue;
 use crossterm::style;
 use serde::Serialize;
 use serde::Deserialize;
 use std::fs;
-use std::env;
 use crossterm::terminal::{ 
     Clear, 
     ClearType 
@@ -26,11 +25,38 @@ use clap::Parser;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Config {
-    work_time: u64,
-    short_break_time: u64,
-    long_break_time: u64,
-    pomodoros_till_long_break: u64,
+    work_time: u16,
+    short_break_time: u16,
+    long_break_time: u16,
+    pomodoros_till_long_break: u16,
     display_in_secs: bool,
+}
+
+impl Config {
+    fn set_work_timer(&mut self, command: SetWorkTimerCommand) {
+        // TODO: Do we wanna return an error from this if we don't parse the numbers correctly, or don't write to the file correctly?
+        // Do we want a specific function for updating the config too?
+        // NOTE: Need to constrain seconds from 0-60!
+        
+        // This is in seconds!
+        let mut work_timer: u16 = 0;
+
+        if let Some(minutes) = command.minutes {
+            work_timer += minutes * 60;
+        }
+
+        if let Some(seconds) = command.minutes {
+            match seconds {
+                0..=60 => work_timer += seconds,
+                _ => println!("Error!")
+            }
+        }
+
+        // Save it to config here!
+        // Does this want to be a method of Config? Yep!
+        self.work_time = work_timer;
+        // Return not error here!
+    }
 }
 
 #[derive(Copy, Clone)]
@@ -41,58 +67,21 @@ enum TimerType {
 }
 
 const CONFIG_PATH: &str = "./Config.toml";
-const WORK_FLAG: &str = "--work";
-const SHORT_BREAK_FLAG: &str = "--short-break";
-const LONG_BREAK_FLAG: &str = "--long-break";
-const SECONDS_FLAG_LONG: &str = "--seconds";
-const SECONDS_FLAG_SHORT: &str = "-s";
-const MINUTES_FLAG_LONG: &str = "--minutes";
-const MINUTES_FLAG_SHORT: &str = "-m";
 
 fn main() -> Result<(), std::io::Error> {
     let contents = fs::read_to_string(CONFIG_PATH)
         .expect(format!("Could not read file {}", CONFIG_PATH).as_str());
     let config: Config = toml::from_str(&contents).unwrap();
 
-    // TODO: Parse commandline args here!
-    // Is the user starting a work timer, a short/long break timer, modifying their config?     
-
-    // OLD CMD ARG PARSING
-    // let args: Vec<String> = env::args().collect();
-    // // match args.len() {
-    // //     2 => (),
-    // //     3 => (),
-    // //     4 => (),
-    // //     _ => {
-    // //         println!("Too few or too many arguments supplied! Pass --help argument to see possible options.");
-    // //         return Ok(());
-    // //     },
-    // // }
-    // if args.len() != 2 {
-    //     println!("Incorrect number of arguments supplied! Pass --help argument to see possible options.");
-    //     return Ok(());
-    // }
-
-    // let timer_type = match args[1].as_str() {
-    //     WORK_FLAG => TimerType::Work,
-    //     SHORT_BREAK_FLAG => TimerType::ShortBreak,
-    //     LONG_BREAK_FLAG => TimerType::LongBreak,
-    //     _ => {
-    //         println!("Unrecognised argument supplied! Pass --help argument to see possible options.");
-    //         return Ok(());
-    //     }
-    // };
-
-    // run_timer(config, timer_type)?; // TODO: Enum for this? Work time, short break, long break?
-
     let args: RustodoroArgs = RustodoroArgs::parse();
-    //println!("{:?}", args);
-
     match args.command {
         RustodoroCommand::Work => run_timer(config, TimerType::Work)?,
         RustodoroCommand::ShortBreak => run_timer(config, TimerType::ShortBreak)?,
         RustodoroCommand::LongBreak => run_timer(config, TimerType::LongBreak)?,
-        RustodoroCommand::SetWorkTimer(_foo) => (),
+        RustodoroCommand::SetWorkTimer(foo) => println!("{:?}", foo), // TODO: Set up a function to pass in the info here and configure
+        RustodoroCommand::SetShortBreakTimer(foo) => println!("{:?}", foo),
+        RustodoroCommand::SetLongBreakTimer(foo) => println!("{:?}", foo),
+        RustodoroCommand::SetPomodorosToLongBreak(foo) => println!("{:?}", foo),
     }
 
     Ok(())
@@ -109,9 +98,9 @@ fn run_timer(config: Config, timer_type: TimerType) -> Result<(), std::io::Error
     let start = Instant::now();
     print_time_remaining(time, time, timer_type)?;
 
-    let mut old_printed_value: u64 = 0;
+    let mut old_printed_value: u16 = 0;
     loop {
-        let elapsed_seconds = start.elapsed().as_secs();
+        let elapsed_seconds = start.elapsed().as_secs() as u16;
 
         if elapsed_seconds > old_printed_value {
             let time_remaining = time - elapsed_seconds;
@@ -136,7 +125,7 @@ fn run_timer(config: Config, timer_type: TimerType) -> Result<(), std::io::Error
     Ok(())
 }
 
-fn print_time_remaining(time_remaining: u64, total_time: u64, timer_type: TimerType) -> Result<(), std::io::Error> {
+fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
     let progress_amount = percentage/10;
