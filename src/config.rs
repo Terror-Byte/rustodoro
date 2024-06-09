@@ -2,6 +2,7 @@ use serde::{
     Serialize,
     Deserialize
 };
+use core::panic;
 use std::fs;
 use crate::args::ToSeconds;
 
@@ -36,11 +37,26 @@ impl Config {
     // Can we determine why we couldn't read from the file? If it's not there, create a default one.
     // Implement a command to create a default config?
     pub fn load(config_path: &str) -> Config {
-        let contents = fs::read_to_string(config_path)
-            .expect(format!("Could not read file {}", config_path).as_str());
-        let config: Config = toml::from_str(&contents)
-            .unwrap();
-        config
+        // let contents = fs::read_to_string(config_path)
+        //     .expect(format!("Could not read file {}", config_path).as_str());
+        // let config: Config = toml::from_str(&contents)
+        //     .unwrap();
+        // config
+
+        let contents_result = fs::read_to_string(config_path);
+        match contents_result {
+            Ok(contents) => {
+                // TODO: If the Config.toml is formatted incorrectly it'll throw a panic here. Shall we just have it panic like this or do we wanna handle it elegantly? Propagate the error up so the function above us can handle the error!
+                toml::from_str(&contents).unwrap()
+            },
+            Err(error) => {
+                // println!("{}", error.to_string());
+                // Config::default() // Do we want to save this now?
+
+                // TODO: File not present, create new one and return that. Save it too?
+                panic!("{}", error.to_string());
+            }
+        }
     }
 
     // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
