@@ -1,5 +1,4 @@
-work_time = 300
+work_time = 1500
 short_break_time = 180
 long_break_time = 600
 pomodoros_to_long_break = 4
-display_in_secs = true

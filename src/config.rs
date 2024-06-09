@@ -19,7 +19,6 @@ pub struct Config {
     pub short_break_time: u16,
     pub long_break_time: u16,
     pub pomodoros_to_long_break: u8,
-    display_in_secs: bool,
 }
 
 impl Config {
