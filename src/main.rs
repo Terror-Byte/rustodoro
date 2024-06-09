@@ -22,9 +22,15 @@ fn main() -> Result<(), std::io::Error> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
-        RustodoroCommand::Work => run_timer(config.work_time, TimerType::Work)?,
-        RustodoroCommand::ShortBreak => run_timer(config.short_break_time, TimerType::ShortBreak)?,
-        RustodoroCommand::LongBreak => run_timer(config.long_break_time, TimerType::LongBreak)?,
+        RustodoroCommand::Work => {
+            run_timer(config.work_time, TimerType::Work)?
+        },
+        RustodoroCommand::ShortBreak => {
+            run_timer(config.short_break_time, TimerType::ShortBreak)?
+        },
+        RustodoroCommand::LongBreak => {
+            run_timer(config.long_break_time, TimerType::LongBreak)?
+        }
         RustodoroCommand::SetWorkTime(command) => {
             let new_config = config.set_work_time(command);
             Config::save(&new_config, CONFIG_PATH);

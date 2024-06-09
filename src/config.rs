@@ -33,6 +33,8 @@ impl Config {
 
     // TODO: Have this handle errors gracefully or just have it panic if things aren't right?
     // To be fair, if we have errors reading or parsing we don't /want/ the program to continue.
+    // Can we determine why we couldn't read from the file? If it's not there, create a default one.
+    // Implement a command to create a default config?
     pub fn load(config_path: &str) -> Config {
         let contents = fs::read_to_string(config_path)
             .expect(format!("Could not read file {}", config_path).as_str());
@@ -68,6 +70,17 @@ impl Config {
         Config {
             pomodoros_to_long_break: command.pomodoros_to_long_break,
             ..self
+        }
+    }
+}
+
+impl Default for Config {
+    fn default() -> Config {
+        Config {
+            work_time: 1500,
+            short_break_time: 300,
+            long_break_time: 900,
+            pomodoros_to_long_break: 4
         }
     }
 }
