@@ -4,6 +4,10 @@ use clap::{
     Subcommand, 
 };
 
+pub trait ToSeconds {
+    fn to_seconds(&self) -> u16; // TODO: Make this generic instead of a solid u16 type?
+}
+
 #[derive(Debug, Parser)]
 pub struct RustodoroArgs {
     #[clap(subcommand)]
@@ -70,4 +74,61 @@ pub struct SetLongBreakTimerCommand {
 #[derive(Debug, Args)]
 pub struct SetPomodorosToLongBreakCommand {
     pub pomodoros_to_long_break: u8,
+}
+
+impl ToSeconds for SetWorkTimerCommand {
+    fn to_seconds(&self) -> u16 {
+        let mut time_in_seconds: u16 = 0;
+
+        if let Some(minutes) = self.minutes {
+            time_in_seconds += minutes * 60;
+        }
+
+        if let Some(seconds) = self.seconds {
+            match seconds {
+                0..=60 => time_in_seconds += seconds as u16,
+                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+            }
+        }
+
+        time_in_seconds
+    }
+}
+
+impl ToSeconds for SetShortBreakTimerCommand {
+    fn to_seconds(&self) -> u16 {
+        let mut time_in_seconds: u16 = 0;
+
+        if let Some(minutes) = self.minutes {
+            time_in_seconds += minutes * 60;
+        }
+
+        if let Some(seconds) = self.seconds {
+            match seconds {
+                0..=60 => time_in_seconds += seconds as u16,
+                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+            }
+        }
+
+        time_in_seconds
+    }
+}
+
+impl ToSeconds for SetLongBreakTimerCommand {
+    fn to_seconds(&self) -> u16 {
+        let mut time_in_seconds: u16 = 0;
+
+        if let Some(minutes) = self.minutes {
+            time_in_seconds += minutes * 60;
+        }
+
+        if let Some(seconds) = self.seconds {
+            match seconds {
+                0..=60 => time_in_seconds += seconds as u16,
+                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+            }
+        }
+
+        time_in_seconds
+    }
 }

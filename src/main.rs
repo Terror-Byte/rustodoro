@@ -19,6 +19,7 @@ fn main() -> Result<(), std::io::Error> {
     let config = Config::load(CONFIG_PATH);
 
     // TODO: What errors do we want these functions all to throw? Do we want them all to be propagatable updwards (if that's even a phrase)?
+    // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
         RustodoroCommand::Work => run_timer(config.work_time, TimerType::Work)?,
