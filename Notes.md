@@ -42,8 +42,6 @@ rustodoro --set-long-break-time --seconds 900
 rustodoro --set-pomodoros-till-long-break 4
 rustodoro --set-display-in-secs true (if true, display timer in seconds. Otherwise, display in minutes)
 
-VIM Note: This is early days, Liam! There's going to be some teething issues/friction initially but you're going to learn as you go. You got this! You can learn this!
-
 How do I do colours when writing to terminal?
 
 How do we figure out percentages again?
