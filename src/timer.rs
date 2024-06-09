@@ -20,14 +20,7 @@ pub enum TimerType {
     LongBreak,
 }
 
-// TODO: Can we make the config global? How do we tell it which timer to run? Does it need to know which one? Do we want to print out which timer is running?
-pub fn run_timer(config: super::config::Config, timer_type: TimerType) -> Result<(), std::io::Error> {
-    let time = match timer_type {
-        TimerType::Work => config.work_time,
-        TimerType::ShortBreak => config.short_break_time,
-        TimerType::LongBreak => config.long_break_time
-    };
-
+pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
     let start = Instant::now();
     print_time_remaining(time, time, timer_type)?;
 
