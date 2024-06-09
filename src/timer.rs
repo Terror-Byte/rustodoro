@@ -48,12 +48,12 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
         stdout,
         cursor::MoveToNextLine(1),
         style::Print("Timer elapsed!"),
+        cursor::MoveToNextLine(1),
         cursor::Show
     )?;
     Ok(())
 }
 
-// TODO: MODIFY THIS TO DISPLAY IN MINUTES + SECS AND NOT JUST SECONDS.
 fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
@@ -78,6 +78,9 @@ fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerT
         TimerType::LongBreak => String::from("Long Break Timer")
     };
 
+    let minutes_component = time_remaining / 60;
+    let seconds_component = time_remaining % 60;
+
     let mut stdout = stdout();
     queue!(
         stdout,
@@ -86,7 +89,7 @@ fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerT
         cursor::Hide,
         style::Print(header),
         cursor::MoveToNextLine(1),
-        style::Print(format!("{} seconds to go.", time_remaining)),
+        style::Print(format_time(minutes_component, seconds_component)),
         cursor::MoveToNextLine(1),
         style::Print("["),
         style::PrintStyledContent(progress_bar.with(Color::Green)),
@@ -94,4 +97,11 @@ fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerT
     )?;
     stdout.flush()?;
     Ok(())
+}
+
+fn format_time(minutes: u16, seconds: u16) -> String {
+    match seconds {
+        0..=10 => format!("{}:{:0>2} Remaining", minutes, seconds),
+        _ => format!("{}:{} Remaining", minutes, seconds)
+    }
 }
