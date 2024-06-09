@@ -1,5 +1,5 @@
 mod args;
-mod rustodoro_config;
+mod config;
 
 use std::io::stdout;
 use std::io::Write;
@@ -16,11 +16,10 @@ use crossterm::style::{
     Stylize 
 };
 
-// My modules
 use args::RustodoroArgs;
 use args::RustodoroCommand;
 use clap::Parser;
-use rustodoro_config::RustodoroConfig;
+use config::Config;
 
 #[derive(Copy, Clone)]
 enum TimerType {
@@ -32,7 +31,7 @@ enum TimerType {
 const CONFIG_PATH: &str = "./Config.toml";
 
 fn main() -> Result<(), std::io::Error> {
-    let config = RustodoroConfig::load(CONFIG_PATH);
+    let config = Config::load(CONFIG_PATH);
 
     // TODO: What errors do we want these functions all to throw? Do we want them all to be propagatable updwards (if that's even a phrase)?
     let args: RustodoroArgs = RustodoroArgs::parse();
@@ -42,7 +41,7 @@ fn main() -> Result<(), std::io::Error> {
         RustodoroCommand::LongBreak => run_timer(config, TimerType::LongBreak)?,
         RustodoroCommand::SetWorkTimer(command) => {
             let new_config = config.set_work_timer(command);
-            RustodoroConfig::save(&new_config, CONFIG_PATH);
+            Config::save(&new_config, CONFIG_PATH);
         },
         RustodoroCommand::SetShortBreakTimer(command) => {
             println!("{:?}", command)
@@ -59,7 +58,7 @@ fn main() -> Result<(), std::io::Error> {
 }
 
 // TODO: Can we make the config global? How do we tell it which timer to run? Does it need to know which one? Do we want to print out which timer is running?
-fn run_timer(config: RustodoroConfig, timer_type: TimerType) -> Result<(), std::io::Error> {
+fn run_timer(config: Config, timer_type: TimerType) -> Result<(), std::io::Error> {
     let time = match timer_type {
         TimerType::Work => config.work_time,
         TimerType::ShortBreak => config.short_break_time,
