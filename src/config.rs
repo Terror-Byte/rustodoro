@@ -4,9 +4,8 @@ use serde::{
 };
 use core::panic;
 use std::fs;
-use crate::args::ToSeconds;
-
 use crate::args::{
+    ToSeconds,
     SetWorkTimeCommand,
     SetShortBreakTimeCommand,
     SetLongBreakTimeCommand,
@@ -23,7 +22,6 @@ pub struct Config {
 }
 
 impl Config {
-    // TODO: Should saving and loading be a method or a static function?
     // TODO: Have this return errors OR just panic?
     pub fn save(config: &Config, config_path: &str) {
         let contents = toml::to_string(config)
@@ -37,12 +35,6 @@ impl Config {
     // Can we determine why we couldn't read from the file? If it's not there, create a default one.
     // Implement a command to create a default config?
     pub fn load(config_path: &str) -> Config {
-        // let contents = fs::read_to_string(config_path)
-        //     .expect(format!("Could not read file {}", config_path).as_str());
-        // let config: Config = toml::from_str(&contents)
-        //     .unwrap();
-        // config
-
         let contents_result = fs::read_to_string(config_path);
         match contents_result {
             Ok(contents) => {
@@ -82,7 +74,6 @@ impl Config {
     }
 
     pub fn set_pomodoros_to_long_break(self, command: SetPomodorosToLongBreakCommand) -> Config {
-        // TODO: Is there any validation we want to do on this? It should handle itself I think?
         Config {
             pomodoros_to_long_break: command.pomodoros_to_long_break,
             ..self
