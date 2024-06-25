@@ -1,0 +1,4 @@
+work_time = 1500
+short_break_time = 10
+long_break_time = 600
+pomodoros_to_long_break = 4
