@@ -12,6 +12,8 @@ use timer::{
     run_timer,
     TimerType,
 };
+use rusqlite::Connection;
+use rusqlite::params;
 
 const CONFIG_PATH: &str = "./Config.toml";
 
@@ -47,6 +49,22 @@ fn main() -> Result<(), std::io::Error> {
             let new_config = config.set_pomodoros_to_long_break(command);
             Config::save(&new_config, CONFIG_PATH);
         },
+    }
+
+    // TEST: Connect to rustodoro database and add a table
+    let conn = Connection::open("rustodoro.db");
+    if let Ok(connection) = conn {
+        println!("Connection to table rustodoro.db established successfully");
+        let query_result = connection.execute(
+        "create table if not exists test_table (
+            id integer primary key,
+            name text not null unique
+        )
+        ", ());
+
+        if let Ok(_) = query_result {
+            println!("Table created successfully!");
+        }
     }
 
     Ok(())
