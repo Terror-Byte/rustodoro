@@ -42,9 +42,6 @@ impl Config {
                 toml::from_str(&contents).unwrap()
             },
             Err(error) => {
-                // println!("{}", error.to_string());
-                // Config::default() // Do we want to save this now?
-
                 // TODO: File not present, create new one and return that. Save it too?
                 panic!("{}", error.to_string());
             }

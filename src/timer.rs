@@ -40,9 +40,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
             break;
         }
     }
-    
-    // TODO: Save to file/database that we've done another work/break stint. Do we want to save logs per day? That might be best!
-    // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
+        
     let mut stdout = stdout();
     queue!(
         stdout,
