@@ -19,9 +19,30 @@ fn main() {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
-        RustodoroCommand::Work => work_timer(config),
-        RustodoroCommand::ShortBreak => short_break(config),
-        RustodoroCommand::LongBreak => long_break(config),
+        RustodoroCommand::Work => {
+            if config.log_to_db {
+                work_timer_with_logging(config);
+            } else {
+                timer::run_timer(config.work_time, TimerType::Work)
+                    .expect("Failed to run work timer.");
+            }
+        },
+        RustodoroCommand::ShortBreak => {
+            if config.log_to_db {
+                short_break_with_logging(config);
+            } else {
+                timer::run_timer(config.short_break_time, TimerType::ShortBreak)
+                    .expect("Failed to run short break timer.");
+            }
+        },
+        RustodoroCommand::LongBreak => {
+            if config.log_to_db {
+                long_break_with_logging(config);
+            } else {
+                timer::run_timer(config.long_break_time, TimerType::LongBreak)
+                    .expect("Failed to run long break timer.");
+            }
+        },
         RustodoroCommand::SetWorkTime(command) => {
             let new_config = config.set_work_time(command);
             Config::save(&new_config, CONFIG_PATH);
@@ -38,10 +59,14 @@ fn main() {
             let new_config = config.set_pomodoros_to_long_break(command);
             Config::save(&new_config, CONFIG_PATH);
         },
+        RustodoroCommand::SetLogToDB(command) => {
+            let new_config = config.set_log_to_db(command);
+            Config::save(&new_config, CONFIG_PATH);
+        }
     }
 }
 
-fn work_timer(config: Config) {
+fn work_timer_with_logging(config: Config) {
     let start_time = db::get_current_unix_time();
     let result = timer::run_timer(config.work_time, TimerType::Work);
     let completion_time = db::get_current_unix_time();
@@ -62,7 +87,7 @@ fn work_timer(config: Config) {
     }
 }
 
-fn short_break(config: Config) {
+fn short_break_with_logging(config: Config) {
     let start_time = db::get_current_unix_time();
     let result = timer::run_timer(config.short_break_time, TimerType::ShortBreak);
     let completion_time = db::get_current_unix_time();
@@ -81,7 +106,7 @@ fn short_break(config: Config) {
     }
 }
 
-fn long_break(config: Config) {
+fn long_break_with_logging(config: Config) {
     let start_time = db::get_current_unix_time();
     let result = timer::run_timer(config.long_break_time, TimerType::LongBreak);
     let completion_time = db::get_current_unix_time();

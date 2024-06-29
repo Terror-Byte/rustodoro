@@ -1,7 +1,8 @@
 use clap::{
+    ArgAction,
     Args,
     Parser,
-    Subcommand, 
+    Subcommand,
 };
 
 pub trait ToSeconds {
@@ -36,6 +37,9 @@ pub enum RustodoroCommand {
 
     /// Configure the amount of pomodoros (work stints) to complete for a long break
     SetPomodorosToLongBreak(SetPomodorosToLongBreakCommand),
+
+    /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
+    SetLogToDB(SetLogToDBCommand),
 }
 
 #[derive(Debug, Args)]
@@ -74,6 +78,12 @@ pub struct SetLongBreakTimeCommand {
 #[derive(Debug, Args)]
 pub struct SetPomodorosToLongBreakCommand {
     pub pomodoros_to_long_break: u8,
+}
+
+#[derive(Debug, Args)]
+pub struct SetLogToDBCommand {
+    #[arg(action = ArgAction::Set)]
+    pub log_to_db: bool,
 }
 
 impl ToSeconds for SetWorkTimeCommand {

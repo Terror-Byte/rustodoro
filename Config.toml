@@ -2,3 +2,4 @@ work_time = 30
 short_break_time = 10
 long_break_time = 15
 pomodoros_to_long_break = 4
+log_to_db = true

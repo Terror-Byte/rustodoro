@@ -1,6 +1,6 @@
 use rusqlite::{
     Connection,
-    Result
+    Result,
 };
 use chrono::{
     Days,

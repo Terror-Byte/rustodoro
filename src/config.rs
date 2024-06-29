@@ -1,15 +1,16 @@
 use serde::{
     Serialize,
-    Deserialize
+    Deserialize,
 };
 use core::panic;
 use std::fs;
 use crate::args::{
-    ToSeconds,
     SetWorkTimeCommand,
     SetShortBreakTimeCommand,
     SetLongBreakTimeCommand,
     SetPomodorosToLongBreakCommand,
+    SetLogToDBCommand,
+    ToSeconds,
 };
 
 // TODO: Do we want the config to be aware of its own path?
@@ -19,6 +20,7 @@ pub struct Config {
     pub short_break_time: u16,
     pub long_break_time: u16,
     pub pomodoros_to_long_break: u8,
+    pub log_to_db: bool,
 }
 
 impl Config {
@@ -76,6 +78,13 @@ impl Config {
             ..self
         }
     }
+
+    pub fn set_log_to_db(self, command: SetLogToDBCommand) -> Config {
+        Config {
+            log_to_db: command.log_to_db,
+            ..self
+        }
+    }
 }
 
 impl Default for Config {
@@ -84,7 +93,8 @@ impl Default for Config {
             work_time: 1500,
             short_break_time: 300,
             long_break_time: 900,
-            pomodoros_to_long_break: 4
+            pomodoros_to_long_break: 4,
+            log_to_db: true,
         }
     }
 }
