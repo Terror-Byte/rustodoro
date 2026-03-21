@@ -1,19 +1,11 @@
+use crossterm::{
+    cursor, queue, style,
+    style::{Color, Stylize},
+    terminal::{Clear, ClearType},
+};
 use std::io::stdout;
 use std::io::Write;
 use std::time::Instant;
-use crossterm::{
-    queue,
-    cursor,
-    style,
-    style::{
-        Color,
-        Stylize,
-    },
-    terminal::{
-        Clear,
-        ClearType,
-    },
-};
 
 #[derive(Copy, Clone)]
 pub enum TimerType {
@@ -40,7 +32,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
             break;
         }
     }
-    
+
     // TODO: Save to file/database that we've done another work/break stint. Do we want to save logs per day? That might be best!
     // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
     let mut stdout = stdout();
@@ -54,12 +46,16 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
     Ok(())
 }
 
-fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
-    let percentage: u64 = (100.0 - ((time_remaining as f64/total_time as f64) * 100.0)) as u64;
+fn print_time_remaining(
+    time_remaining: u16,
+    total_time: u16,
+    timer_type: TimerType,
+) -> Result<(), std::io::Error> {
+    let percentage: u64 = (100.0 - ((time_remaining as f64 / total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
-    let progress_amount = percentage/10;
+    let progress_amount = percentage / 10;
     let space_amount = 10 - progress_amount;
-    
+
     if progress_amount > 0 {
         for _i in 0..progress_amount {
             progress_bar += "=";
@@ -75,7 +71,7 @@ fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerT
     let header = match timer_type {
         TimerType::Work => String::from("Work Timer"),
         TimerType::ShortBreak => String::from("Short Break Timer"),
-        TimerType::LongBreak => String::from("Long Break Timer")
+        TimerType::LongBreak => String::from("Long Break Timer"),
     };
 
     let minutes_component = time_remaining / 60;
@@ -102,6 +98,7 @@ fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerT
 fn format_time(minutes: u16, seconds: u16) -> String {
     match seconds {
         0..=10 => format!("{}:{:0>2} Remaining", minutes, seconds),
-        _ => format!("{}:{} Remaining", minutes, seconds)
+        _ => format!("{}:{} Remaining", minutes, seconds),
     }
 }
+

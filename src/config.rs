@@ -1,16 +1,10 @@
-use serde::{
-    Serialize,
-    Deserialize
+use crate::args::{
+    SetLongBreakTimeCommand, SetPomodorosToLongBreakCommand, SetShortBreakTimeCommand,
+    SetWorkTimeCommand, ToSeconds,
 };
 use core::panic;
+use serde::{Deserialize, Serialize};
 use std::fs;
-use crate::args::{
-    ToSeconds,
-    SetWorkTimeCommand,
-    SetShortBreakTimeCommand,
-    SetLongBreakTimeCommand,
-    SetPomodorosToLongBreakCommand,
-};
 
 // TODO: Do we want the config to be aware of its own path?
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -24,8 +18,7 @@ pub struct Config {
 impl Config {
     // TODO: Have this return errors OR just panic?
     pub fn save(config: &Config, config_path: &str) {
-        let contents = toml::to_string(config)
-            .expect("Could not parse config as string.");
+        let contents = toml::to_string(config).expect("Could not parse config as string.");
         fs::write(config_path, contents.as_str())
             .expect(format!("Could not write to file {}", config_path).as_str());
     }
@@ -40,7 +33,7 @@ impl Config {
             Ok(contents) => {
                 // TODO: If the Config.toml is formatted incorrectly it'll throw a panic here. Shall we just have it panic like this or do we wanna handle it elegantly? Propagate the error up so the function above us can handle the error!
                 toml::from_str(&contents).unwrap()
-            },
+            }
             Err(error) => {
                 // println!("{}", error.to_string());
                 // Config::default() // Do we want to save this now?
@@ -53,7 +46,7 @@ impl Config {
 
     // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
     pub fn set_work_time(self, command: SetWorkTimeCommand) -> Config {
-        Config { 
+        Config {
             work_time: command.to_seconds(),
             ..self
         }
@@ -87,7 +80,8 @@ impl Default for Config {
             work_time: 1500,
             short_break_time: 300,
             long_break_time: 900,
-            pomodoros_to_long_break: 4
+            pomodoros_to_long_break: 4,
         }
     }
 }
+
