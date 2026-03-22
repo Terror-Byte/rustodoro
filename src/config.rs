@@ -2,11 +2,10 @@ use crate::args::{
     SetLongBreakTimeCommand, SetPomodorosToLongBreakCommand, SetShortBreakTimeCommand,
     SetWorkTimeCommand, ToSeconds,
 };
-use core::panic;
+use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
-// TODO: Do we want the config to be aware of its own path?
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
     pub work_time: u16,
@@ -16,32 +15,16 @@ pub struct Config {
 }
 
 impl Config {
-    // TODO: Have this return errors OR just panic?
-    pub fn save(config: &Config, config_path: &str) {
-        let contents = toml::to_string(config).expect("Could not parse config as string.");
-        fs::write(config_path, contents.as_str())
-            .expect(format!("Could not write to file {}", config_path).as_str());
+    pub fn save(config: &Config, config_path: &str) -> Result<(), Error> {
+        let contents = toml::to_string(config)?;
+        fs::write(config_path, contents.as_str())?;
+        Ok(())
     }
 
-    // TODO: Have this handle errors gracefully or just have it panic if things aren't right?
-    // To be fair, if we have errors reading or parsing we don't /want/ the program to continue.
-    // Can we determine why we couldn't read from the file? If it's not there, create a default one.
-    // Implement a command to create a default config?
-    pub fn load(config_path: &str) -> Config {
-        let contents_result = fs::read_to_string(config_path);
-        match contents_result {
-            Ok(contents) => {
-                // TODO: If the Config.toml is formatted incorrectly it'll throw a panic here. Shall we just have it panic like this or do we wanna handle it elegantly? Propagate the error up so the function above us can handle the error!
-                toml::from_str(&contents).unwrap()
-            }
-            Err(error) => {
-                // println!("{}", error.to_string());
-                // Config::default() // Do we want to save this now?
-
-                // TODO: File not present, create new one and return that. Save it too?
-                panic!("{}", error.to_string());
-            }
-        }
+    pub fn load(config_path: &str) -> Result<Config, Error> {
+        let contents = fs::read_to_string(config_path)?;
+        let config = toml::from_str(&contents)?;
+        Ok(config)
     }
 
     // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
@@ -84,4 +67,3 @@ impl Default for Config {
         }
     }
 }
-
