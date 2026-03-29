@@ -6,6 +6,8 @@ use crate::error::Error;
 use serde::{Deserialize, Serialize};
 use std::fs;
 
+type ConfigResult = Result<Config, Error>;
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
     pub work_time: u16,
@@ -21,13 +23,13 @@ impl Config {
         Ok(())
     }
 
-    pub fn load(config_path: &str) -> Result<Config, Error> {
+    pub fn load(config_path: &str) -> ConfigResult {
         let contents = fs::read_to_string(config_path)?;
         let config = toml::from_str(&contents)?;
         Ok(config)
     }
 
-    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Result<Config, Error> {
+    pub fn set_work_time(self, args: SetWorkTimeArgs) -> ConfigResult {
         let work_time = args.to_seconds();
         if work_time == 0 {
             return Err(Error::ConfigError(
@@ -38,7 +40,7 @@ impl Config {
         Ok(Config { work_time, ..self })
     }
 
-    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Result<Config, Error> {
+    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> ConfigResult {
         let short_break_time = args.to_seconds();
         if short_break_time == 0 {
             return Err(Error::ConfigError(
@@ -52,7 +54,7 @@ impl Config {
         })
     }
 
-    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Result<Config, Error> {
+    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> ConfigResult {
         let long_break_time = args.to_seconds();
         if long_break_time == 0 {
             return Err(Error::ConfigError(
@@ -66,10 +68,7 @@ impl Config {
         })
     }
 
-    pub fn set_pomodoros_to_long_break(
-        self,
-        args: SetPomodorosToLongBreakArgs,
-    ) -> Result<Config, Error> {
+    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> ConfigResult {
         if args.pomodoros_to_long_break == 0 {
             return Err(Error::ConfigError(
                 "Cannot set 'pomodoros to long break' to 0!".to_string(),
