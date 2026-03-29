@@ -22,9 +22,12 @@ impl Config {
     }
 
     pub fn load(config_path: &str) -> Result<Config> {
-        let contents = fs::read_to_string(config_path)?;
-        let config = toml::from_str(&contents)?;
-        Ok(config)
+        if let Ok(contents) = fs::read_to_string(config_path) {
+            let config = toml::from_str(&contents)?;
+            return Ok(config);
+        }
+
+        Ok(Config::default())
     }
 
     pub fn set_work_time(self, args: SetWorkTimeArgs) -> Result<Config> {
