@@ -1,5 +1,7 @@
 use core::fmt;
 
+pub type Result<T> = std::result::Result<T, Error>;
+
 pub enum Error {
     IOError(std::io::Error),
     SerializeTomlError(toml::ser::Error),

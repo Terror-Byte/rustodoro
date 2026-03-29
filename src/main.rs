@@ -7,12 +7,12 @@ use args::{RustodoroArgs, RustodoroCommand};
 use clap::Parser;
 use config::Config;
 use directories::ProjectDirs;
-use error::Error;
+use error::Result;
 use timer::{run_timer, TimerType};
 
 const RELATIVE_CONFIG_PATH: &str = "./config.toml";
 
-fn main() -> Result<(), Error> {
+fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
     let config_path = get_config_path();
     let config = Config::load(config_path.as_str())?;

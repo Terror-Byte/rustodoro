@@ -1,4 +1,4 @@
-use crate::error::Error;
+use crate::error::Result;
 use crossterm::{
     cursor, queue, style,
     style::{Color, Stylize},
@@ -15,7 +15,7 @@ pub enum TimerType {
     LongBreak,
 }
 
-pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), Error> {
+pub fn run_timer(time: u16, timer_type: TimerType) -> Result<()> {
     let start = Instant::now();
     print_time_remaining(time, time, timer_type)?;
 
@@ -45,11 +45,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), Error> {
     Ok(())
 }
 
-fn print_time_remaining(
-    time_remaining: u16,
-    total_time: u16,
-    timer_type: TimerType,
-) -> Result<(), Error> {
+fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<()> {
     let percentage: u64 = (100.0 - ((time_remaining as f64 / total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
     let progress_amount = percentage / 10;
