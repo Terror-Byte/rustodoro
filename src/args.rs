@@ -128,4 +128,3 @@ impl ToSeconds for SetLongBreakTimeCommand {
         time_in_seconds
     }
 }
-

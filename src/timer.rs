@@ -1,3 +1,4 @@
+use crate::error::Error;
 use crossterm::{
     cursor, queue, style,
     style::{Color, Stylize},
@@ -14,7 +15,7 @@ pub enum TimerType {
     LongBreak,
 }
 
-pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error> {
+pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), Error> {
     let start = Instant::now();
     print_time_remaining(time, time, timer_type)?;
 
@@ -33,8 +34,6 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(), std::io::Error>
         }
     }
 
-    // TODO: Save to file/database that we've done another work/break stint. Do we want to save logs per day? That might be best!
-    // Do we have a max size/amount of logs? Might be worth looking into later but don't worry for now.
     let mut stdout = stdout();
     queue!(
         stdout,
@@ -50,7 +49,7 @@ fn print_time_remaining(
     time_remaining: u16,
     total_time: u16,
     timer_type: TimerType,
-) -> Result<(), std::io::Error> {
+) -> Result<(), Error> {
     let percentage: u64 = (100.0 - ((time_remaining as f64 / total_time as f64) * 100.0)) as u64;
     let mut progress_bar: String = String::new();
     let progress_amount = percentage / 10;
@@ -101,4 +100,3 @@ fn format_time(minutes: u16, seconds: u16) -> String {
         _ => format!("{}:{} Remaining", minutes, seconds),
     }
 }
-
