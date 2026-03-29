@@ -37,6 +37,7 @@ fn get_database_path() -> String {
         if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
             if let Some(directory) = proj_dirs.data_dir().to_str() {
                 let mut dbpath = String::from(directory);
+                dbpath.push_str("/");
                 dbpath.push_str(DATABASE_NAME);
                 return dbpath;
             }

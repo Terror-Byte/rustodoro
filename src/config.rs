@@ -3,8 +3,12 @@ use crate::args::{
     SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
+
+const CONFIG_NAME: &str = "config.toml";
+const RELATIVE_CONFIG_PATH: &str = "./config.toml";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
@@ -101,4 +105,18 @@ impl Default for Config {
             log_to_db: true,
         }
     }
+}
+
+pub fn get_config_path() -> String {
+    if !cfg!(debug_assertions) {
+        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+            if let Some(directory) = proj_dirs.config_dir().to_str() {
+                let mut config_path = String::from(directory);
+                config_path.push_str("/");
+                config_path.push_str(CONFIG_NAME);
+                return config_path;
+            }
+        }
+    }
+    String::from(RELATIVE_CONFIG_PATH)
 }

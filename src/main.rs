@@ -5,20 +5,15 @@ mod error;
 mod timer;
 
 use args::{DisplayPomodorosCommand, RustodoroArgs, RustodoroCommand};
-// use chrono::{DateTime, Local, Utc};
 use chrono::{Local, TimeZone};
 use clap::Parser;
 use config::Config;
-use directories::ProjectDirs;
 use error::Result;
-// use std::time::SystemTime;
 use timer::TimerType;
-
-const RELATIVE_CONFIG_PATH: &str = "./config.toml";
 
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
-    let config_path = get_config_path();
+    let config_path = config::get_config_path();
     let config = Config::load(config_path.as_str())?;
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
@@ -89,17 +84,4 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn get_config_path() -> String {
-    if !cfg!(debug_assertions) {
-        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
-            if let Some(directory) = proj_dirs.config_dir().to_str() {
-                let mut directory_str = String::from(directory);
-                directory_str.push_str("/config.toml");
-                return directory_str;
-            }
-        }
-    }
-    String::from(RELATIVE_CONFIG_PATH)
 }
