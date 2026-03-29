@@ -5,10 +5,13 @@ mod error;
 mod timer;
 
 use args::{DisplayPomodorosCommand, RustodoroArgs, RustodoroCommand};
+// use chrono::{DateTime, Local, Utc};
+use chrono::{Local, TimeZone};
 use clap::Parser;
 use config::Config;
 use directories::ProjectDirs;
 use error::Result;
+// use std::time::SystemTime;
 use timer::TimerType;
 
 const RELATIVE_CONFIG_PATH: &str = "./config.toml";
@@ -58,7 +61,28 @@ fn main() -> Result<()> {
             Config::save(&new_config, config_path.as_str())?;
         }
         RustodoroCommand::DisplayPomodoros(command) => match command.command {
-            DisplayPomodorosCommand::Day => println!("Day"),
+            DisplayPomodorosCommand::Day => {
+                let todays_pomodoros = db::get_todays_sessions(TimerType::Work)?;
+                println!(
+                    "You have completed {} pomodoros today.\n",
+                    todays_pomodoros.len()
+                );
+
+                // TODO: Print this as a table?
+                let mut i = 1;
+                for pomodoro in todays_pomodoros {
+                    // TODO: Replace .unwrap() with ?
+                    let start_time = Local.timestamp_opt(pomodoro.0 as i64, 0).unwrap();
+                    let end_time = Local.timestamp_opt(pomodoro.1 as i64, 0).unwrap();
+                    println!(
+                        "Pomodoro {} - Start Time: {}, End Time: {}",
+                        i,
+                        start_time.format("%H:%M:%S"),
+                        end_time.format("%H:%M:%S")
+                    );
+                    i += 1;
+                }
+            }
             DisplayPomodorosCommand::Week => println!("Week"),
             DisplayPomodorosCommand::Month => println!("Month"),
         },

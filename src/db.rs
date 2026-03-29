@@ -67,49 +67,27 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
-struct Foo {
-    start_time: u64,
-    completion_time: u64,
-}
-
-// Querying Pomodoros
-pub fn get_pomodoros_today() -> Result<()> {
+pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
     let midnight_today = get_todays_date_midnight()?;
     let midnight_tomorrow = get_tomorrows_date_midnight()?;
-
-    /*
-    let conn = Connection::open(DB_PATH).expect("Failed to open rustodoro.db");
-
-    let mut statement = conn
-        .prepare(query)
-        .expect("Failed to prepare query for table"); // TODO: USER FRIENDLY ERROR HERE
-
-    let pomodoro_iter = statement
-        .query_map([], |row| {
-            let start_time: u64 = row.get(0).expect("foo");
-            let completion_time: u64 = row.get(1).expect("bar");
-            Ok((start_time, completion_time))
-        })
-        .expect("Failed to parse statement.");
-
-    for pomodoro in pomodoro_iter {
-        if let Ok((start_time, completion_time)) = pomodoro {
-            println!("Start Time: {}, End Time: {}", start_time, completion_time);
-        }
-    }
-    */
-
+    let table_name = match session_type {
+        TimerType::Work => POMODORO_TABLE_NAME,
+        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
+        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
+    };
     let query = format!(
         "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-        POMODORO_TABLE_NAME, midnight_today, midnight_tomorrow
+        table_name, midnight_today, midnight_tomorrow
     );
 
+    // TODO: Replace expect() with ?
     let mut statement = conn
         .prepare(query.as_str())
-        .expect("Failed to prepare query for table pomodoros");
+        .expect(format!("Failed to prepare query for table {}", table_name).as_str());
 
-    let pomodoro_iter = statement
+    // TODO: Replace expect() with ?
+    let session_iter = statement
         .query_map([], |row| {
             let start_time: u64 = row.get(0).expect("foo");
             let completion_time: u64 = row.get(1).expect("bar");
@@ -117,21 +95,18 @@ pub fn get_pomodoros_today() -> Result<()> {
         })
         .expect("Failed to parse statement");
 
-    // let foo = pomodoro_iter.collect();
-    let mut vec: Vec<Foo> = Vec::new();
+    let mut session_vector: Vec<(u64, u64)> = Vec::new();
 
-    for pomodoro in pomodoro_iter {
-        if let Ok((start_time, completion_time)) = pomodoro {
-            vec.push(Foo {
-                start_time,
-                completion_time,
-            })
+    for session in session_iter {
+        if let Ok((start_time, end_time)) = session {
+            session_vector.push((start_time, end_time))
         }
     }
 
     // TODO: Return this iterator?
+    // TODO: Do we parse the timestamps in human-readable time?
 
-    Ok(())
+    Ok(session_vector)
 }
 
 // Timing Stuff
@@ -150,7 +125,7 @@ fn get_tomorrows_date_midnight() -> Result<i64> {
     Ok(local.timestamp())
 }
 
-// Debug Print Functions
+// Debug Print Functions (move these to their own file?)
 #[cfg(debug_assertions)]
 pub fn debug_print_records_from_today(table: &str) {
     let midnight_today = get_todays_date_midnight().unwrap();
