@@ -1,12 +1,9 @@
 use crate::args::{
-    SetLogToDBCommand, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs,
-    SetWorkTimeArgs,
+    SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs,
+    SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
-use core::panic;
 use serde::{Deserialize, Serialize};
-use serde::{Deserialize, Serialize};
-use std::fs;
 use std::fs;
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
@@ -86,7 +83,7 @@ impl Config {
         })
     }
 
-    pub fn set_log_to_db(self, command: SetLogToDBCommand) -> Config {
+    pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {
         Config {
             log_to_db: command.log_to_db,
             ..self

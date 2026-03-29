@@ -34,7 +34,7 @@ pub enum RustodoroCommand {
     SetPomodorosToLongBreak(SetPomodorosToLongBreakArgs),
 
     /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
-    SetLogToDB(SetLogToDBCommand),
+    SetLogToDB(SetLogToDBArgs),
 
     /// Display the pomodoros from today, this week or this month
     DisplayPomodoros(DisplayPomodorosArgs),
@@ -79,7 +79,7 @@ pub struct SetPomodorosToLongBreakArgs {
 }
 
 #[derive(Debug, Args)]
-pub struct SetLogToDBCommand {
+pub struct SetLogToDBArgs {
     #[arg(action = ArgAction::Set)]
     pub log_to_db: bool,
 }
