@@ -1,12 +1,13 @@
 use chrono::{Days, Local, NaiveTime};
+use directories::ProjectDirs;
 use rusqlite::{Connection, Result};
-use std::time::SystemTime;
 
-// TODO: Where to store this? .config? Somewhere else? Maybe allow the user to use an environment
-// variable to define this?
-// Reddit says ~/.local/share/ for permanent data storage, such as databases
-const DB_PATH: &str = "rustodoro.db";
+use crate::timer::TimerType;
 
+const DATABASE_NAME: &str = "rustodoro.db";
+const RELATIVE_DB_PATH: &str = "./rustodoro.db";
+
+// Queries
 const CREATE_POMODORO_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS pomodoros (
             start_time INTEGER PRIMARY KEY,
             completion_time INTEGER NOT NULL
@@ -31,38 +32,37 @@ pub const POMODORO_TABLE_NAME: &str = "pomodoros";
 pub const SHORT_BREAK_TABLE_NAME: &str = "short_breaks";
 pub const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
 
-pub fn save_pomodoro_to_db(start_time: u64, completion_time: u64) -> Result<()> {
-    let conn = Connection::open(DB_PATH)?;
-
-    // Create table if it doesn't exist
-    conn.execute(CREATE_POMODORO_TABLE_QUERY, ())?;
-
-    // Insert new value into table.
-    conn.execute(INSERT_POMODORO_QUERY, (start_time, completion_time))?;
-
-    Ok(())
+fn get_database_path() -> String {
+    if !cfg!(debug_assertions) {
+        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+            if let Some(directory) = proj_dirs.data_dir().to_str() {
+                let mut dbpath = String::from(directory);
+                dbpath.push_str(DATABASE_NAME);
+                return dbpath;
+            }
+        }
+    }
+    String::from(RELATIVE_DB_PATH)
 }
 
-pub fn save_short_break_to_db(start_time: u64, completion_time: u64) -> Result<()> {
-    let conn = Connection::open(DB_PATH)?;
+pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerType) -> Result<()> {
+    let (create_table_query, insert_query) = match session_type {
+        TimerType::Work => (CREATE_POMODORO_TABLE_QUERY, INSERT_POMODORO_QUERY),
+        TimerType::ShortBreak => (CREATE_SHORT_BREAK_TABLE_QUERY, INSERT_SHORT_BREAK_QUERY),
+        TimerType::LongBreak => (CREATE_LONG_BREAK_TABLE_QUERY, INSERT_LONG_BREAK_QUERY),
+    };
+
+    let conn = Connection::open(get_database_path())?;
 
     // Create table if it doesn't exist
-    conn.execute(CREATE_SHORT_BREAK_TABLE_QUERY, ())?;
+    conn.execute(create_table_query, ())?;
 
-    // Insert new value into table.
-    conn.execute(INSERT_SHORT_BREAK_QUERY, (start_time, completion_time))?;
+    // Insert new value into table
+    conn.execute(insert_query, (start_time, end_time))?;
 
-    Ok(())
-}
-
-pub fn save_long_break_to_db(start_time: u64, completion_time: u64) -> Result<()> {
-    let conn = Connection::open(DB_PATH)?;
-
-    // Create table if it doesn't exist
-    conn.execute(CREATE_LONG_BREAK_TABLE_QUERY, ())?;
-
-    // Insert new value into table.
-    conn.execute(INSERT_LONG_BREAK_QUERY, (start_time, completion_time))?;
+    if cfg!(debug_assertions) {
+        debug_print_records(session_type);
+    }
 
     Ok(())
 }
@@ -74,9 +74,9 @@ struct Foo {
 
 // Querying Pomodoros
 pub fn get_pomodoros_today() -> Result<()> {
-    let conn = Connection::open(DB_PATH)?;
-    let midnight_today = get_todays_date_midnight();
-    let midnight_tomorrow = get_tomorrows_date_midnight();
+    let conn = Connection::open(get_database_path())?;
+    let midnight_today = get_todays_date_midnight()?;
+    let midnight_tomorrow = get_tomorrows_date_midnight()?;
 
     /*
     let conn = Connection::open(DB_PATH).expect("Failed to open rustodoro.db");
@@ -135,37 +135,26 @@ pub fn get_pomodoros_today() -> Result<()> {
 }
 
 // Timing Stuff
-// TODO: Is there some better error handling we could do?
-pub fn get_current_unix_time() -> u64 {
-    SystemTime::now()
-        .duration_since(SystemTime::UNIX_EPOCH)
-        .expect("Failed to attain current unix epoch.")
-        .as_secs()
-}
-
-fn get_todays_date_midnight() -> i64 {
-    // TODO: Handle the error from unwrapping this
+fn get_todays_date_midnight() -> Result<i64> {
+    // TODO: Replace unwrap() with ?
     let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
     let local = Local::now().with_time(midnight).unwrap();
-    local.timestamp()
+    Ok(local.timestamp())
 }
 
-fn get_tomorrows_date_midnight() -> i64 {
-    // TODO: Handle the error from unwrapping this
+fn get_tomorrows_date_midnight() -> Result<i64> {
+    // TODO: Replace unwrap() with ?
     let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
     let local = Local::now().with_time(midnight).unwrap();
     let local = local.checked_add_days(Days::new(1)).unwrap();
-    local.timestamp()
+    Ok(local.timestamp())
 }
 
 // Debug Print Functions
-// pub fn print_all_records(table: &str) {
-//     execute_statement(format!("SELECT start_time, completion_time FROM {}", table).as_str());
-// }
-
+#[cfg(debug_assertions)]
 pub fn debug_print_records_from_today(table: &str) {
-    let midnight_today = get_todays_date_midnight();
-    let midnight_tomorrow = get_tomorrows_date_midnight();
+    let midnight_today = get_todays_date_midnight().unwrap();
+    let midnight_tomorrow = get_tomorrows_date_midnight().unwrap();
     execute_statement(
         format!(
             "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
@@ -175,12 +164,13 @@ pub fn debug_print_records_from_today(table: &str) {
     );
 }
 
+#[cfg(debug_assertions)]
 pub fn debug_count_records_from_today(table: &str) -> u64 {
     let mut res = 0;
-    let conn = Connection::open(DB_PATH).expect("Failed to open rustodoro.db");
+    let conn = Connection::open(RELATIVE_DB_PATH).unwrap();
 
-    let midnight_today = get_todays_date_midnight();
-    let midnight_tomorrow = get_tomorrows_date_midnight();
+    let midnight_today = get_todays_date_midnight().unwrap();
+    let midnight_tomorrow = get_tomorrows_date_midnight().unwrap();
 
     let mut statement = conn
         .prepare(
@@ -209,8 +199,9 @@ pub fn debug_count_records_from_today(table: &str) -> u64 {
     res
 }
 
+#[cfg(debug_assertions)]
 fn execute_statement(query: &str) {
-    let conn = Connection::open(DB_PATH).expect("Failed to open rustodoro.db");
+    let conn = Connection::open(RELATIVE_DB_PATH).expect("Failed to open rustodoro.db");
 
     let mut statement = conn
         .prepare(query)
@@ -229,4 +220,20 @@ fn execute_statement(query: &str) {
             println!("Start Time: {}, End Time: {}", start_time, completion_time);
         }
     }
+}
+
+#[cfg(debug_assertions)]
+fn debug_print_records(timer_type: TimerType) {
+    let (table_name, debug_name) = match timer_type {
+        TimerType::Work => (POMODORO_TABLE_NAME, "Pomodoros"),
+        TimerType::ShortBreak => (SHORT_BREAK_TABLE_NAME, "Short breaks"),
+        TimerType::LongBreak => (LONG_BREAK_TABLE_NAME, "Long breaks"),
+    };
+
+    debug_print_records_from_today(table_name);
+    println!(
+        "{} today: {}",
+        debug_name,
+        debug_count_records_from_today(table_name)
+    );
 }

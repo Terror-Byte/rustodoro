@@ -4,9 +4,8 @@ use crossterm::{
     style::{Color, Stylize},
     terminal::{Clear, ClearType},
 };
-use std::io::stdout;
-use std::io::Write;
-use std::time::Instant;
+use std::io::{stdout, Write};
+use std::time::{Instant, SystemTime};
 
 #[derive(Copy, Clone)]
 pub enum TimerType {
@@ -15,7 +14,9 @@ pub enum TimerType {
     LongBreak,
 }
 
-pub fn run_timer(time: u16, timer_type: TimerType) -> Result<()> {
+pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
+    // TODO: Feels weird having a SystemTime *and* an Instant, is there a way we can combine them?
+    let start_timestamp = get_current_unix_time()?;
     let start = Instant::now();
     print_time_remaining(time, time, timer_type)?;
 
@@ -33,6 +34,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<()> {
             break;
         }
     }
+    let end_timestamp = get_current_unix_time()?;
 
     let mut stdout = stdout();
     queue!(
@@ -42,7 +44,8 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<()> {
         cursor::MoveToNextLine(1),
         cursor::Show
     )?;
-    Ok(())
+
+    Ok((start_timestamp, end_timestamp))
 }
 
 fn print_time_remaining(time_remaining: u16, total_time: u16, timer_type: TimerType) -> Result<()> {
@@ -95,4 +98,10 @@ fn format_time(minutes: u16, seconds: u16) -> String {
         0..=10 => format!("{}:{:0>2} Remaining", minutes, seconds),
         _ => format!("{}:{} Remaining", minutes, seconds),
     }
+}
+
+fn get_current_unix_time() -> Result<u64> {
+    Ok(SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_secs())
 }

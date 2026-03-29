@@ -1,5 +1,5 @@
-work_time = 10
+work_time = 5
 short_break_time = 10
-long_break_time = 15
+long_break_time = 5
 pomodoros_to_long_break = 4
 log_to_db = true

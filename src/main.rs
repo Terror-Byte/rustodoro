@@ -20,24 +20,21 @@ fn main() -> Result<()> {
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
         RustodoroCommand::Work => {
+            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::Work)?;
             if config.log_to_db {
-                work_timer_with_logging(config);
-            } else {
-                timer::run_timer(config.work_time, TimerType::Work)?;
+                db::save_session_to_db(start_time, end_time, TimerType::Work)?;
             }
         }
         RustodoroCommand::ShortBreak => {
+            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::ShortBreak)?;
             if config.log_to_db {
-                short_break_with_logging(config);
-            } else {
-                timer::run_timer(config.short_break_time, TimerType::ShortBreak)?;
+                db::save_session_to_db(start_time, end_time, TimerType::ShortBreak)?;
             }
         }
         RustodoroCommand::LongBreak => {
+            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::LongBreak)?;
             if config.log_to_db {
-                long_break_with_logging(config);
-            } else {
-                timer::run_timer(config.long_break_time, TimerType::LongBreak)?;
+                db::save_session_to_db(start_time, end_time, TimerType::LongBreak)?;
             }
         }
         RustodoroCommand::SetWorkTime(command) => {
@@ -68,84 +65,6 @@ fn main() -> Result<()> {
     }
 
     Ok(())
-}
-
-fn work_timer_with_logging(config: Config) {
-    // Do we want these functions in the timer module instead?
-
-    let start_time = db::get_current_unix_time();
-    let result = timer::run_timer(config.work_time, TimerType::Work);
-    let completion_time = db::get_current_unix_time();
-
-    // TODO: Handle the possible database error more elegantly!
-    match result {
-        Ok(_) => {
-            db::save_pomodoro_to_db(start_time, completion_time)
-                .expect("Failed to save pomodoro to database.");
-
-            // TODO: If we've hit the pomodoro threshold for long break, notify the user.
-            // If todays_pomodoros % pomodoros_to_long_break, increment the long break counter in the DB.
-
-            // Debug Print Stuff
-            if cfg!(debug_assertions) {
-                db::debug_print_records_from_today(db::POMODORO_TABLE_NAME);
-                println!(
-                    "Pomodoros Today: {}",
-                    db::debug_count_records_from_today(db::POMODORO_TABLE_NAME)
-                );
-            }
-        }
-        Err(e) => println!("{}", e),
-    }
-}
-
-fn short_break_with_logging(config: Config) {
-    let start_time = db::get_current_unix_time();
-    let result = timer::run_timer(config.short_break_time, TimerType::ShortBreak);
-    let completion_time = db::get_current_unix_time();
-
-    // TODO: Handle the possible database error more elegantly!
-    match result {
-        Ok(_) => {
-            db::save_short_break_to_db(start_time, completion_time)
-                .expect("Failed to save short break to database.");
-
-            if cfg!(debug_assertions) {
-                db::debug_print_records_from_today(db::SHORT_BREAK_TABLE_NAME);
-                println!(
-                    "Short breaks Today: {}",
-                    db::debug_count_records_from_today(db::SHORT_BREAK_TABLE_NAME)
-                );
-            }
-        }
-        Err(e) => println!("{}", e),
-    }
-}
-
-fn long_break_with_logging(config: Config) {
-    let start_time = db::get_current_unix_time();
-    let result = timer::run_timer(config.long_break_time, TimerType::LongBreak);
-    let completion_time = db::get_current_unix_time();
-
-    // TODO: Handle the possible database error more elegantly!
-    match result {
-        Ok(_) => {
-            db::save_long_break_to_db(start_time, completion_time)
-                .expect("Failed to save long break to database.");
-
-            // Debug Print Stuff
-            if cfg!(debug_assertions) {
-                db::debug_print_records_from_today(db::LONG_BREAK_TABLE_NAME);
-                println!(
-                    "Long breaks Today: {}",
-                    db::debug_count_records_from_today(db::LONG_BREAK_TABLE_NAME)
-                );
-            }
-        }
-        Err(e) => println!("{}", e),
-    }
-
-    // TODO: Decrement the long break counter in the DB.
 }
 
 fn get_config_path() -> String {
