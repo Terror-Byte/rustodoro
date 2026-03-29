@@ -1,11 +1,21 @@
 use core::fmt;
 
-#[derive(Debug)]
 pub enum Error {
     IOError(std::io::Error),
     SerializeTomlError(toml::ser::Error),
     DeserializeTomlError(toml::de::Error),
     ConfigError(String),
+}
+
+impl fmt::Debug for Error {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Error::IOError(e) => write!(f, "IO Error - {}", e),
+            Error::SerializeTomlError(e) => write!(f, "Serialize TOML Error - {}", e),
+            Error::DeserializeTomlError(e) => write!(f, "Deserialize TOML Error - {}", e),
+            Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
+        }
+    }
 }
 
 impl fmt::Display for Error {
