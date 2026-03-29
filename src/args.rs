@@ -42,7 +42,7 @@ pub struct SetWorkTimeArgs {
 
     /// Seconds component of the work timer
     #[arg(short, long)]
-    pub seconds: Option<u8>,
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
@@ -51,9 +51,9 @@ pub struct SetShortBreakTimeArgs {
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
-    /// Seconds component of the long break timer
+    /// Seconds component of the short break timer
     #[arg(short, long)]
-    pub seconds: Option<u8>,
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
@@ -62,9 +62,9 @@ pub struct SetLongBreakTimeArgs {
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
-    /// Seconds component of the short break timer
+    /// Seconds component of the long break timer
     #[arg(short, long)]
-    pub seconds: Option<u8>,
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
@@ -81,10 +81,7 @@ impl ToSeconds for SetWorkTimeArgs {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
@@ -100,10 +97,7 @@ impl ToSeconds for SetShortBreakTimeArgs {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
@@ -119,10 +113,7 @@ impl ToSeconds for SetLongBreakTimeArgs {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
