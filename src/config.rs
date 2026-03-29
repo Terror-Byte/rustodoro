@@ -1,18 +1,11 @@
-use serde::{
-    Serialize,
-    Deserialize
-};
-use core::panic;
-use std::fs;
 use crate::args::{
+    SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs, SetWorkTimeArgs,
     ToSeconds,
-    SetWorkTimeCommand,
-    SetShortBreakTimeCommand,
-    SetLongBreakTimeCommand,
-    SetPomodorosToLongBreakCommand,
 };
+use crate::error::{Error, Result};
+use serde::{Deserialize, Serialize};
+use std::fs;
 
-// TODO: Do we want the config to be aware of its own path?
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
     pub work_time: u16,
@@ -22,62 +15,68 @@ pub struct Config {
 }
 
 impl Config {
-    // TODO: Have this return errors OR just panic?
-    pub fn save(config: &Config, config_path: &str) {
-        let contents = toml::to_string(config)
-            .expect("Could not parse config as string.");
-        fs::write(config_path, contents.as_str())
-            .expect(format!("Could not write to file {}", config_path).as_str());
+    pub fn save(config: &Config, config_path: &str) -> Result<()> {
+        let contents = toml::to_string(config)?;
+        fs::write(config_path, contents.as_str())?;
+        Ok(())
     }
 
-    // TODO: Have this handle errors gracefully or just have it panic if things aren't right?
-    // To be fair, if we have errors reading or parsing we don't /want/ the program to continue.
-    // Can we determine why we couldn't read from the file? If it's not there, create a default one.
-    // Implement a command to create a default config?
-    pub fn load(config_path: &str) -> Config {
-        let contents_result = fs::read_to_string(config_path);
-        match contents_result {
-            Ok(contents) => {
-                // TODO: If the Config.toml is formatted incorrectly it'll throw a panic here. Shall we just have it panic like this or do we wanna handle it elegantly? Propagate the error up so the function above us can handle the error!
-                toml::from_str(&contents).unwrap()
-            },
-            Err(error) => {
-                // println!("{}", error.to_string());
-                // Config::default() // Do we want to save this now?
+    pub fn load(config_path: &str) -> Result<Config> {
+        let contents = fs::read_to_string(config_path)?;
+        let config = toml::from_str(&contents)?;
+        Ok(config)
+    }
 
-                // TODO: File not present, create new one and return that. Save it too?
-                panic!("{}", error.to_string());
-            }
+    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Result<Config> {
+        let work_time = args.to_seconds();
+        if work_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set work timer duration to 0 seconds!".to_string(),
+            ));
         }
+
+        Ok(Config { work_time, ..self })
     }
 
-    // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
-    pub fn set_work_time(self, command: SetWorkTimeCommand) -> Config {
-        Config { 
-            work_time: command.to_seconds(),
+    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Result<Config> {
+        let short_break_time = args.to_seconds();
+        if short_break_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set short break time duration to 0 seconds!".to_string(),
+            ));
+        }
+
+        Ok(Config {
+            short_break_time,
             ..self
-        }
+        })
     }
 
-    pub fn set_short_break_time(self, command: SetShortBreakTimeCommand) -> Config {
-        Config {
-            short_break_time: command.to_seconds(),
-            ..self
+    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Result<Config> {
+        let long_break_time = args.to_seconds();
+        if long_break_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set long break time duration to 0 seconds!".to_string(),
+            ));
         }
+
+        Ok(Config {
+            long_break_time,
+            ..self
+        })
     }
 
-    pub fn set_long_break_time(self, command: SetLongBreakTimeCommand) -> Config {
-        Config {
-            long_break_time: command.to_seconds(),
-            ..self
+    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Result<Config> {
+        if args.pomodoros_to_long_break == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set 'pomodoros to long break' to 0!".to_string(),
+            ));
         }
-    }
 
-    pub fn set_pomodoros_to_long_break(self, command: SetPomodorosToLongBreakCommand) -> Config {
-        Config {
-            pomodoros_to_long_break: command.pomodoros_to_long_break,
+        Ok(Config {
+            pomodoros_to_long_break: args.pomodoros_to_long_break,
             ..self
-        }
+        })
     }
 }
 
@@ -87,7 +86,7 @@ impl Default for Config {
             work_time: 1500,
             short_break_time: 300,
             long_break_time: 900,
-            pomodoros_to_long_break: 4
+            pomodoros_to_long_break: 4,
         }
     }
 }
