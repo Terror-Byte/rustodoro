@@ -27,33 +27,59 @@ impl Config {
         Ok(config)
     }
 
-    // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
-    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Config {
-        Config {
-            work_time: args.to_seconds(),
-            ..self
+    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Result<Config, Error> {
+        let work_time = args.to_seconds();
+        if work_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set work timer duration to 0 seconds!".to_string(),
+            ));
         }
+
+        Ok(Config { work_time, ..self })
     }
 
-    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Config {
-        Config {
-            short_break_time: args.to_seconds(),
-            ..self
+    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Result<Config, Error> {
+        let short_break_time = args.to_seconds();
+        if short_break_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set short break time duration to 0 seconds!".to_string(),
+            ));
         }
+
+        Ok(Config {
+            short_break_time,
+            ..self
+        })
     }
 
-    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Config {
-        Config {
-            long_break_time: args.to_seconds(),
-            ..self
+    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Result<Config, Error> {
+        let long_break_time = args.to_seconds();
+        if long_break_time == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set long break time duration to 0 seconds!".to_string(),
+            ));
         }
+
+        Ok(Config {
+            long_break_time,
+            ..self
+        })
     }
 
-    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Config {
-        Config {
+    pub fn set_pomodoros_to_long_break(
+        self,
+        args: SetPomodorosToLongBreakArgs,
+    ) -> Result<Config, Error> {
+        if args.pomodoros_to_long_break == 0 {
+            return Err(Error::ConfigError(
+                "Cannot set 'pomodoros to long break' to 0!".to_string(),
+            ));
+        }
+
+        Ok(Config {
             pomodoros_to_long_break: args.pomodoros_to_long_break,
             ..self
-        }
+        })
     }
 }
 

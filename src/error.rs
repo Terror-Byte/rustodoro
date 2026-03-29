@@ -5,14 +5,16 @@ pub enum Error {
     IOError(std::io::Error),
     SerializeTomlError(toml::ser::Error),
     DeserializeTomlError(toml::de::Error),
+    ConfigError(String),
 }
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Error::IOError(e) => write!(f, "{}", e),
-            Error::SerializeTomlError(e) => write!(f, "{}", e),
-            Error::DeserializeTomlError(e) => write!(f, "{}", e),
+            Error::IOError(e) => write!(f, "IO Error - {}", e),
+            Error::SerializeTomlError(e) => write!(f, "Serialize TOML Error - {}", e),
+            Error::DeserializeTomlError(e) => write!(f, "Deserialize TOML Error - {}", e),
+            Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
         }
     }
 }
@@ -23,6 +25,7 @@ impl std::error::Error for Error {
             Error::IOError(e) => Some(e),
             Error::SerializeTomlError(e) => Some(e),
             Error::DeserializeTomlError(e) => Some(e),
+            _ => None,
         }
     }
 }

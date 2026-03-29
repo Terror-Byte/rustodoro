@@ -22,19 +22,19 @@ fn main() -> Result<(), Error> {
         RustodoroCommand::ShortBreak => run_timer(config.short_break_time, TimerType::ShortBreak)?,
         RustodoroCommand::LongBreak => run_timer(config.long_break_time, TimerType::LongBreak)?,
         RustodoroCommand::SetWorkTime(command) => {
-            let new_config = config.set_work_time(command);
+            let new_config = config.set_work_time(command)?;
             Config::save(&new_config, config_path.as_str())?
         }
         RustodoroCommand::SetShortBreakTime(command) => {
-            let new_config = config.set_short_break_time(command);
+            let new_config = config.set_short_break_time(command)?;
             Config::save(&new_config, config_path.as_str())?
         }
         RustodoroCommand::SetLongBreakTime(command) => {
-            let new_config = config.set_long_break_time(command);
+            let new_config = config.set_long_break_time(command)?;
             Config::save(&new_config, config_path.as_str())?
         }
         RustodoroCommand::SetPomodorosToLongBreak(command) => {
-            let new_config = config.set_pomodoros_to_long_break(command);
+            let new_config = config.set_pomodoros_to_long_break(command)?;
             Config::save(&new_config, config_path.as_str())?
         }
     }
