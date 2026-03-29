@@ -68,6 +68,7 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
+// TODO: Tidy this function up
 pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
     let midnight_today = get_todays_date_midnight()?;
@@ -104,9 +105,6 @@ pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
         }
     }
 
-    // TODO: Return this iterator?
-    // TODO: Do we parse the timestamps in human-readable time?
-
     Ok(session_vector)
 }
 
@@ -126,7 +124,7 @@ fn get_tomorrows_date_midnight() -> Result<i64> {
     Ok(local.timestamp())
 }
 
-// Debug Print Functions (move these to their own file?)
+// Debug Print Functions (move these to their own file? Or just remove eventually?)
 #[cfg(debug_assertions)]
 pub fn debug_print_records_from_today(table: &str) {
     let midnight_today = get_todays_date_midnight().unwrap();

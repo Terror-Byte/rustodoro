@@ -63,14 +63,25 @@ fn main() -> Result<()> {
                     todays_pomodoros.len()
                 );
 
-                // TODO: Print this as a table?
+                // TODO: Find a library to print this as a nice table?
+                println!(
+                    "| {0: <10} | {1: <10} | {2: <10} |",
+                    "session", "start time", "end time"
+                );
+                println!(
+                    "| {} | {} | {} |",
+                    "-".repeat(10),
+                    "-".repeat(10),
+                    "-".repeat(10)
+                );
+
                 let mut i = 1;
                 for pomodoro in todays_pomodoros {
                     // TODO: Replace .unwrap() with ?
                     let start_time = Local.timestamp_opt(pomodoro.0 as i64, 0).unwrap();
                     let end_time = Local.timestamp_opt(pomodoro.1 as i64, 0).unwrap();
                     println!(
-                        "Pomodoro {} - Start Time: {}, End Time: {}",
+                        "| {0: <10} | {1: <10} | {2: <10} |",
                         i,
                         start_time.format("%H:%M:%S"),
                         end_time.format("%H:%M:%S")
