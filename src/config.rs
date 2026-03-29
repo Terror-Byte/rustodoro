@@ -1,6 +1,6 @@
 use crate::args::{
-    SetLongBreakTimeCommand, SetPomodorosToLongBreakCommand, SetShortBreakTimeCommand,
-    SetWorkTimeCommand, ToSeconds,
+    SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs, SetWorkTimeArgs,
+    ToSeconds,
 };
 use crate::error::Error;
 use serde::{Deserialize, Serialize};
@@ -28,30 +28,30 @@ impl Config {
     }
 
     // TODO: Do we complain if the user sets the number to just 0? Or do we let them do it? Do we set it to a default value in that case and print an error?
-    pub fn set_work_time(self, command: SetWorkTimeCommand) -> Config {
+    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Config {
         Config {
-            work_time: command.to_seconds(),
+            work_time: args.to_seconds(),
             ..self
         }
     }
 
-    pub fn set_short_break_time(self, command: SetShortBreakTimeCommand) -> Config {
+    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Config {
         Config {
-            short_break_time: command.to_seconds(),
+            short_break_time: args.to_seconds(),
             ..self
         }
     }
 
-    pub fn set_long_break_time(self, command: SetLongBreakTimeCommand) -> Config {
+    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Config {
         Config {
-            long_break_time: command.to_seconds(),
+            long_break_time: args.to_seconds(),
             ..self
         }
     }
 
-    pub fn set_pomodoros_to_long_break(self, command: SetPomodorosToLongBreakCommand) -> Config {
+    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Config {
         Config {
-            pomodoros_to_long_break: command.pomodoros_to_long_break,
+            pomodoros_to_long_break: args.pomodoros_to_long_break,
             ..self
         }
     }
