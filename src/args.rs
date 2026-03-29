@@ -1,9 +1,4 @@
-use clap::{
-    ArgAction,
-    Args,
-    Parser,
-    Subcommand,
-};
+use clap::{ArgAction, Args, Parser, Subcommand};
 
 pub trait ToSeconds {
     fn to_seconds(&self) -> u16; // TODO: Make this generic instead of a solid u16 type?
@@ -40,6 +35,9 @@ pub enum RustodoroCommand {
 
     /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
     SetLogToDB(SetLogToDBCommand),
+
+    /// Display the pomodoros from today, this week or this month
+    DisplayPomodoros(DisplayPomodorosArgs),
 }
 
 #[derive(Debug, Args)]
@@ -47,10 +45,10 @@ pub struct SetWorkTimeCommand {
     /// Minutes component of the work timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
-    
+
     /// Seconds component of the work timer
     #[arg(short, long)]
-    pub seconds: Option<u8>, 
+    pub seconds: Option<u8>,
 }
 
 #[derive(Debug, Args)]
@@ -58,7 +56,7 @@ pub struct SetShortBreakTimeCommand {
     /// Minutes component of the short break timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
-    
+
     /// Seconds component of the long break timer
     #[arg(short, long)]
     pub seconds: Option<u8>,
@@ -69,7 +67,7 @@ pub struct SetLongBreakTimeCommand {
     /// Minutes component of the long break timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
-    
+
     /// Seconds component of the short break timer
     #[arg(short, long)]
     pub seconds: Option<u8>,
@@ -86,6 +84,19 @@ pub struct SetLogToDBCommand {
     pub log_to_db: bool,
 }
 
+#[derive(Debug, Args)]
+pub struct DisplayPomodorosArgs {
+    #[command(subcommand)]
+    pub command: DisplayPomodorosCommand,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum DisplayPomodorosCommand {
+    Day,
+    Week,
+    Month,
+}
+
 impl ToSeconds for SetWorkTimeCommand {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
@@ -97,7 +108,7 @@ impl ToSeconds for SetWorkTimeCommand {
         if let Some(seconds) = self.seconds {
             match seconds {
                 0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
             }
         }
 
@@ -116,7 +127,7 @@ impl ToSeconds for SetShortBreakTimeCommand {
         if let Some(seconds) = self.seconds {
             match seconds {
                 0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
             }
         }
 
@@ -135,10 +146,11 @@ impl ToSeconds for SetLongBreakTimeCommand {
         if let Some(seconds) = self.seconds {
             match seconds {
                 0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!") // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
+                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
             }
         }
 
         time_in_seconds
     }
 }
+
