@@ -22,16 +22,16 @@ pub enum RustodoroCommand {
     LongBreak,
 
     /// Configure the work timer
-    SetWorkTime(SetWorkTimeCommand),
+    SetWorkTime(SetWorkTimeArgs),
 
     /// Configure the short break timer
-    SetShortBreakTime(SetShortBreakTimeCommand),
+    SetShortBreakTime(SetShortBreakTimeArgs),
 
     /// Configure the long break timer
-    SetLongBreakTime(SetLongBreakTimeCommand),
+    SetLongBreakTime(SetLongBreakTimeArgs),
 
     /// Configure the amount of pomodoros (work stints) to complete for a long break
-    SetPomodorosToLongBreak(SetPomodorosToLongBreakCommand),
+    SetPomodorosToLongBreak(SetPomodorosToLongBreakArgs),
 
     /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
     SetLogToDB(SetLogToDBCommand),
@@ -41,40 +41,40 @@ pub enum RustodoroCommand {
 }
 
 #[derive(Debug, Args)]
-pub struct SetWorkTimeCommand {
+pub struct SetWorkTimeArgs {
     /// Minutes component of the work timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
     /// Seconds component of the work timer
     #[arg(short, long)]
-    pub seconds: Option<u8>,
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
-pub struct SetShortBreakTimeCommand {
+pub struct SetShortBreakTimeArgs {
     /// Minutes component of the short break timer
-    #[arg(short, long)]
-    pub minutes: Option<u16>,
-
-    /// Seconds component of the long break timer
-    #[arg(short, long)]
-    pub seconds: Option<u8>,
-}
-
-#[derive(Debug, Args)]
-pub struct SetLongBreakTimeCommand {
-    /// Minutes component of the long break timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
     /// Seconds component of the short break timer
     #[arg(short, long)]
-    pub seconds: Option<u8>,
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
-pub struct SetPomodorosToLongBreakCommand {
+pub struct SetLongBreakTimeArgs {
+    /// Minutes component of the long break timer
+    #[arg(short, long)]
+    pub minutes: Option<u16>,
+
+    /// Seconds component of the long break timer
+    #[arg(short, long)]
+    pub seconds: Option<u16>,
+}
+
+#[derive(Debug, Args)]
+pub struct SetPomodorosToLongBreakArgs {
     pub pomodoros_to_long_break: u8,
 }
 
@@ -97,7 +97,7 @@ pub enum DisplayPomodorosCommand {
     Month,
 }
 
-impl ToSeconds for SetWorkTimeCommand {
+impl ToSeconds for SetWorkTimeArgs {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -106,17 +106,14 @@ impl ToSeconds for SetWorkTimeCommand {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
     }
 }
 
-impl ToSeconds for SetShortBreakTimeCommand {
+impl ToSeconds for SetShortBreakTimeArgs {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -125,17 +122,14 @@ impl ToSeconds for SetShortBreakTimeCommand {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
     }
 }
 
-impl ToSeconds for SetLongBreakTimeCommand {
+impl ToSeconds for SetLongBreakTimeArgs {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -144,13 +138,9 @@ impl ToSeconds for SetLongBreakTimeCommand {
         }
 
         if let Some(seconds) = self.seconds {
-            match seconds {
-                0..=60 => time_in_seconds += seconds as u16,
-                _ => println!("Error!"), // TODO: What do we do in this case? Should this return a Result? Or set to a default value and spit out an error for the user?
-            }
+            time_in_seconds += seconds;
         }
 
         time_in_seconds
     }
 }
-
