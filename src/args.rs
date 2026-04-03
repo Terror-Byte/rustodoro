@@ -38,6 +38,12 @@ pub enum RustodoroCommand {
 
     /// Display the pomodoros from today, this week or this month
     DisplayPomodoros(DisplayPomodorosArgs),
+
+    /// Display the short breaks from today, this week or this month
+    DisplayShortBreaks(DisplayShortBreaksArgs),
+
+    /// Display the long breaks from today, this week or this month
+    DisplayLongBreaks(DisplayLongBreaksArgs),
 }
 
 #[derive(Debug, Args)]
@@ -84,17 +90,29 @@ pub struct SetLogToDBArgs {
     pub log_to_db: bool,
 }
 
-#[derive(Debug, Args)]
-pub struct DisplayPomodorosArgs {
-    #[command(subcommand)]
-    pub subcommand: Option<DisplayPomodorosCommand>,
-}
-
 #[derive(Debug, Subcommand)]
-pub enum DisplayPomodorosCommand {
+pub enum DisplayCommand {
     Day,
     Week,
     Month,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayPomodorosArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<DisplayCommand>,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayShortBreaksArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<DisplayCommand>,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayLongBreaksArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<DisplayCommand>,
 }
 
 impl ToSeconds for SetWorkTimeArgs {

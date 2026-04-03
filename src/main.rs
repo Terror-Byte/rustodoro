@@ -4,7 +4,7 @@ mod db;
 mod error;
 mod timer;
 
-use args::{DisplayPomodorosCommand, RustodoroArgs, RustodoroCommand};
+use args::{DisplayCommand, RustodoroArgs, RustodoroCommand};
 use chrono::{DateTime, Local, TimeZone};
 use clap::Parser;
 use config::Config;
@@ -57,15 +57,15 @@ fn main() -> Result<()> {
         }
         RustodoroCommand::DisplayPomodoros(command) => match command.subcommand {
             Some(subcommand) => match subcommand {
-                DisplayPomodorosCommand::Day => {
+                DisplayCommand::Day => {
                     let sessions = db::get_todays_sessions(TimerType::Work)?;
                     print_days_sessions(sessions, TimerType::Work)?;
                 }
-                DisplayPomodorosCommand::Week => {
+                DisplayCommand::Week => {
                     let sessions = db::get_weeks_sessions(TimerType::Work)?;
                     print_weeks_sessions(sessions, TimerType::Work)?;
                 }
-                DisplayPomodorosCommand::Month => {
+                DisplayCommand::Month => {
                     let sessions = db::get_months_sessions(TimerType::Work)?;
                     print_months_sessions(sessions, TimerType::Work)?;
                 }
@@ -73,6 +73,46 @@ fn main() -> Result<()> {
             None => {
                 let sessions = db::get_todays_sessions(TimerType::Work)?;
                 print_days_sessions(sessions, TimerType::Work)?;
+            }
+        },
+        RustodoroCommand::DisplayShortBreaks(command) => match command.subcommand {
+            Some(subcommand) => match subcommand {
+                DisplayCommand::Day => {
+                    let sessions = db::get_todays_sessions(TimerType::ShortBreak)?;
+                    print_days_sessions(sessions, TimerType::ShortBreak)?;
+                }
+                DisplayCommand::Week => {
+                    let sessions = db::get_weeks_sessions(TimerType::ShortBreak)?;
+                    print_weeks_sessions(sessions, TimerType::ShortBreak)?;
+                }
+                DisplayCommand::Month => {
+                    let sessions = db::get_months_sessions(TimerType::ShortBreak)?;
+                    print_months_sessions(sessions, TimerType::ShortBreak)?;
+                }
+            },
+            None => {
+                let sessions = db::get_todays_sessions(TimerType::ShortBreak)?;
+                print_days_sessions(sessions, TimerType::ShortBreak)?;
+            }
+        },
+        RustodoroCommand::DisplayLongBreaks(command) => match command.subcommand {
+            Some(subcommand) => match subcommand {
+                DisplayCommand::Day => {
+                    let sessions = db::get_todays_sessions(TimerType::LongBreak)?;
+                    print_days_sessions(sessions, TimerType::LongBreak)?;
+                }
+                DisplayCommand::Week => {
+                    let sessions = db::get_weeks_sessions(TimerType::LongBreak)?;
+                    print_weeks_sessions(sessions, TimerType::LongBreak)?;
+                }
+                DisplayCommand::Month => {
+                    let sessions = db::get_months_sessions(TimerType::LongBreak)?;
+                    print_months_sessions(sessions, TimerType::LongBreak)?;
+                }
+            },
+            None => {
+                let sessions = db::get_todays_sessions(TimerType::LongBreak)?;
+                print_days_sessions(sessions, TimerType::LongBreak)?;
             }
         },
     }
@@ -83,9 +123,9 @@ fn main() -> Result<()> {
 // TODO: Can these functions go in their own module, to tidy up the main file?
 fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
     let session_name = match session_type {
-        TimerType::Work => "pomodoros",
-        TimerType::ShortBreak => "short breaks",
-        TimerType::LongBreak => "long breaks",
+        TimerType::Work => "pomodoro(s)",
+        TimerType::ShortBreak => "short break(s)",
+        TimerType::LongBreak => "long break(s)",
     };
 
     println!(
@@ -136,9 +176,9 @@ fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Re
 
 fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
     let session_name = match session_type {
-        TimerType::Work => "pomodoros",
-        TimerType::ShortBreak => "short breaks",
-        TimerType::LongBreak => "long breaks",
+        TimerType::Work => "pomodoro(s)",
+        TimerType::ShortBreak => "short break(s)",
+        TimerType::LongBreak => "long break(s)",
     };
 
     println!(
@@ -193,9 +233,9 @@ fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> R
 // TODO: This could probably be combined with the function for printing weeks?
 fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
     let session_name = match session_type {
-        TimerType::Work => "pomodoros",
-        TimerType::ShortBreak => "short breaks",
-        TimerType::LongBreak => "long breaks",
+        TimerType::Work => "pomodoro(s)",
+        TimerType::ShortBreak => "short break(s)",
+        TimerType::LongBreak => "long break(s)",
     };
 
     println!(
