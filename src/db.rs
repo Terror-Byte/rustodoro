@@ -2,6 +2,7 @@ use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use directories::ProjectDirs;
 use rusqlite::{Connection, Result};
 
+use crate::args::DisplayCommand;
 use crate::timer::TimerType;
 
 const DATABASE_NAME: &str = "rustodoro.db";
@@ -65,7 +66,22 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
-fn get_sessions(
+// TODO: Do we want to move the DisplayCommand type elsewhere and rename it?
+pub fn get_sessions(
+    session_type: TimerType,
+    timespan_opt: &Option<DisplayCommand>,
+) -> Result<Vec<(u64, u64)>> {
+    match timespan_opt {
+        Some(timespan) => match timespan {
+            DisplayCommand::Day => get_todays_sessions(session_type),
+            DisplayCommand::Week => get_weeks_sessions(session_type),
+            DisplayCommand::Month => get_months_sessions(session_type),
+        },
+        None => get_todays_sessions(session_type),
+    }
+}
+
+fn get_sessions_internal(
     session_type: TimerType,
     start_timestamp: i64,
     end_timestamp: i64,
@@ -101,26 +117,26 @@ fn get_sessions(
     Ok(session_vector)
 }
 
-pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let start_of_day = get_start_of_day_timestamp()?;
     let end_of_day = get_end_of_day_timestamp()?;
-    let session_vector = get_sessions(session_type, start_of_day, end_of_day)?;
+    let session_vector = get_sessions_internal(session_type, start_of_day, end_of_day)?;
 
     Ok(session_vector)
 }
 
-pub fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let start_of_week = get_start_of_week_timestamp()?;
     let end_of_week = get_end_of_week_timestamp()?;
-    let session_vector = get_sessions(session_type, start_of_week, end_of_week)?;
+    let session_vector = get_sessions_internal(session_type, start_of_week, end_of_week)?;
 
     Ok(session_vector)
 }
 
-pub fn get_months_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_months_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let start_of_month = get_start_of_month_timestamp()?;
     let end_of_month = get_end_of_month_timestamp()?;
-    let session_vector = get_sessions(session_type, start_of_month, end_of_month)?;
+    let session_vector = get_sessions_internal(session_type, start_of_month, end_of_month)?;
 
     Ok(session_vector)
 }
