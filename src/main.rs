@@ -58,45 +58,7 @@ fn main() -> Result<()> {
         RustodoroCommand::DisplayPomodoros(command) => match command.command {
             DisplayPomodorosCommand::Day => {
                 let todays_pomodoros = db::get_todays_sessions(TimerType::Work)?;
-                println!(
-                    "You have completed {} pomodoros today.\n",
-                    todays_pomodoros.len()
-                );
-
-                // TODO: Find a library to print this as a nice table?
-                println!(
-                    "| {0: <10} | {1: <10} | {2: <10} |",
-                    "session", "start time", "end time"
-                );
-                println!(
-                    "| {} | {} | {} |",
-                    "-".repeat(10),
-                    "-".repeat(10),
-                    "-".repeat(10)
-                );
-
-                let mut i = 1;
-                for pomodoro in todays_pomodoros {
-                    let start_time: DateTime<Local> = Local
-                        .timestamp_opt(pomodoro.0 as i64, 0)
-                        .single()
-                        .ok_or(Error::DateTimeError(String::from(
-                            "Failed to parse timestamp as a valid datetime!",
-                        )))?;
-                    let end_time: DateTime<Local> = Local
-                        .timestamp_opt(pomodoro.1 as i64, 0)
-                        .single()
-                        .ok_or(Error::DateTimeError(String::from(
-                            "Failed to parse timestamp as a valid datetime!",
-                        )))?;
-                    println!(
-                        "| {0: <10} | {1: <10} | {2: <10} |",
-                        i,
-                        start_time.format("%H:%M:%S"),
-                        end_time.format("%H:%M:%S")
-                    );
-                    i += 1;
-                }
+                print_days_sessions(todays_pomodoros, TimerType::Work)?;
             }
             DisplayPomodorosCommand::Week => {
                 let weeks_pomodoros = db::get_weeks_sessions(TimerType::Work)?;
@@ -146,6 +108,59 @@ fn main() -> Result<()> {
 
             DisplayPomodorosCommand::Month => println!("Month"),
         },
+    }
+
+    Ok(())
+}
+
+fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
+    let session_name = match session_type {
+        TimerType::Work => "pomodoros",
+        TimerType::ShortBreak => "short breaks",
+        TimerType::LongBreak => "long breaks",
+    };
+
+    println!(
+        "You have completed {} {} today.\n",
+        sessions.len(),
+        session_name
+    );
+
+    // TODO: Find a library to print this as a nice table?
+    println!(
+        "| {0: <10} | {1: <10} | {2: <10} |",
+        "session", "start time", "end time"
+    );
+    println!(
+        "| {} | {} | {} |",
+        "-".repeat(10),
+        "-".repeat(10),
+        "-".repeat(10)
+    );
+
+    let mut i = 1;
+    for session in sessions {
+        let start_time: DateTime<Local> =
+            Local
+                .timestamp_opt(session.0 as i64, 0)
+                .single()
+                .ok_or(Error::DateTimeError(String::from(
+                    "Failed to parse timestamp as a valid datetime!",
+                )))?;
+        let end_time: DateTime<Local> =
+            Local
+                .timestamp_opt(session.1 as i64, 0)
+                .single()
+                .ok_or(Error::DateTimeError(String::from(
+                    "Failed to parse timestamp as a valid datetime!",
+                )))?;
+        println!(
+            "| {0: <10} | {1: <10} | {2: <10} |",
+            i,
+            start_time.format("%H:%M:%S"),
+            end_time.format("%H:%M:%S")
+        );
+        i += 1;
     }
 
     Ok(())
