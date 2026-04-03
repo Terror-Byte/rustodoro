@@ -55,72 +55,46 @@ fn main() -> Result<()> {
             let new_config = config.set_log_to_db(command);
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::DisplayPomodoros(command) => match command.subcommand {
-            Some(subcommand) => match subcommand {
-                DisplayCommand::Day => {
-                    let sessions = db::get_todays_sessions(TimerType::Work)?;
-                    print_days_sessions(sessions, TimerType::Work)?;
-                }
-                DisplayCommand::Week => {
-                    let sessions = db::get_weeks_sessions(TimerType::Work)?;
-                    print_weeks_sessions(sessions, TimerType::Work)?;
-                }
-                DisplayCommand::Month => {
-                    let sessions = db::get_months_sessions(TimerType::Work)?;
-                    print_months_sessions(sessions, TimerType::Work)?;
-                }
-            },
-            None => {
-                let sessions = db::get_todays_sessions(TimerType::Work)?;
-                print_days_sessions(sessions, TimerType::Work)?;
-            }
-        },
-        RustodoroCommand::DisplayShortBreaks(command) => match command.subcommand {
-            Some(subcommand) => match subcommand {
-                DisplayCommand::Day => {
-                    let sessions = db::get_todays_sessions(TimerType::ShortBreak)?;
-                    print_days_sessions(sessions, TimerType::ShortBreak)?;
-                }
-                DisplayCommand::Week => {
-                    let sessions = db::get_weeks_sessions(TimerType::ShortBreak)?;
-                    print_weeks_sessions(sessions, TimerType::ShortBreak)?;
-                }
-                DisplayCommand::Month => {
-                    let sessions = db::get_months_sessions(TimerType::ShortBreak)?;
-                    print_months_sessions(sessions, TimerType::ShortBreak)?;
-                }
-            },
-            None => {
-                let sessions = db::get_todays_sessions(TimerType::ShortBreak)?;
-                print_days_sessions(sessions, TimerType::ShortBreak)?;
-            }
-        },
-        RustodoroCommand::DisplayLongBreaks(command) => match command.subcommand {
-            Some(subcommand) => match subcommand {
-                DisplayCommand::Day => {
-                    let sessions = db::get_todays_sessions(TimerType::LongBreak)?;
-                    print_days_sessions(sessions, TimerType::LongBreak)?;
-                }
-                DisplayCommand::Week => {
-                    let sessions = db::get_weeks_sessions(TimerType::LongBreak)?;
-                    print_weeks_sessions(sessions, TimerType::LongBreak)?;
-                }
-                DisplayCommand::Month => {
-                    let sessions = db::get_months_sessions(TimerType::LongBreak)?;
-                    print_months_sessions(sessions, TimerType::LongBreak)?;
-                }
-            },
-            None => {
-                let sessions = db::get_todays_sessions(TimerType::LongBreak)?;
-                print_days_sessions(sessions, TimerType::LongBreak)?;
-            }
-        },
+        RustodoroCommand::DisplayPomodoros(command) => {
+            print_sessions(command.subcommand, TimerType::Work)?;
+        }
+        RustodoroCommand::DisplayShortBreaks(command) => {
+            print_sessions(command.subcommand, TimerType::ShortBreak)?;
+        }
+        RustodoroCommand::DisplayLongBreaks(command) => {
+            print_sessions(command.subcommand, TimerType::LongBreak)?;
+        }
     }
 
     Ok(())
 }
 
 // TODO: Can these functions go in their own module, to tidy up the main file?
+fn print_sessions(subcommand: Option<DisplayCommand>, session_type: TimerType) -> Result<()> {
+    match subcommand {
+        Some(subcommand) => match subcommand {
+            DisplayCommand::Day => {
+                let sessions = db::get_todays_sessions(session_type)?;
+                print_days_sessions(sessions, session_type)?;
+            }
+            DisplayCommand::Week => {
+                let sessions = db::get_weeks_sessions(session_type)?;
+                print_weeks_sessions(sessions, session_type)?;
+            }
+            DisplayCommand::Month => {
+                let sessions = db::get_months_sessions(session_type)?;
+                print_months_sessions(sessions, session_type)?;
+            }
+        },
+        None => {
+            let sessions = db::get_todays_sessions(session_type)?;
+            print_days_sessions(sessions, session_type)?;
+        }
+    }
+
+    Ok(())
+}
+
 fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
     let session_name = match session_type {
         TimerType::Work => "pomodoro(s)",
