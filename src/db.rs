@@ -62,10 +62,6 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     // Insert new value into table
     conn.execute(insert_query, (start_time, end_time))?;
 
-    if cfg!(debug_assertions) {
-        debug_print_records(session_type);
-    }
-
     Ok(())
 }
 
@@ -237,93 +233,4 @@ fn get_end_of_month_timestamp() -> Result<i64> {
     let result = Local.from_local_datetime(&end_of_month).unwrap();
 
     Ok(result.timestamp())
-}
-
-// Debug Print Functions (move these to their own file? Or just remove eventually?)
-// Might not need these anymore now, as we've got session printing commands in the works?
-#[cfg(debug_assertions)]
-pub fn debug_print_records_from_today(table: &str) {
-    let midnight_today = get_start_of_day_timestamp().unwrap();
-    let midnight_tomorrow = get_end_of_day_timestamp().unwrap();
-    execute_statement(
-        format!(
-            "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-            table, midnight_today, midnight_tomorrow
-        )
-        .as_str(),
-    );
-}
-
-#[cfg(debug_assertions)]
-pub fn debug_count_records_from_today(table: &str) -> u64 {
-    let mut res = 0;
-    let conn = Connection::open(RELATIVE_DB_PATH).unwrap();
-
-    let midnight_today = get_start_of_day_timestamp().unwrap();
-    let midnight_tomorrow = get_end_of_day_timestamp().unwrap();
-
-    let mut statement = conn
-        .prepare(
-            format!(
-                "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-                table, midnight_today, midnight_tomorrow
-            )
-            .as_str(),
-        )
-        .expect("Failed to prepare query for pomodoro table"); // TODO: USER FRIENDLY ERROR HERE
-
-    let pomodoro_iter = statement
-        .query_map([], |row| {
-            let start_time: u64 = row.get(0).expect("foo");
-            let completion_time: u64 = row.get(1).expect("bar");
-            Ok((start_time, completion_time))
-        })
-        .expect("Failed to parse statement.");
-
-    for pomodoro in pomodoro_iter {
-        if let Ok((_, _)) = pomodoro {
-            res += 1;
-        }
-    }
-
-    res
-}
-
-#[cfg(debug_assertions)]
-fn execute_statement(query: &str) {
-    let conn = Connection::open(RELATIVE_DB_PATH).expect("Failed to open rustodoro.db");
-
-    let mut statement = conn
-        .prepare(query)
-        .expect("Failed to prepare query for table"); // TODO: USER FRIENDLY ERROR HERE
-
-    let pomodoro_iter = statement
-        .query_map([], |row| {
-            let start_time: u64 = row.get(0).expect("foo");
-            let completion_time: u64 = row.get(1).expect("bar");
-            Ok((start_time, completion_time))
-        })
-        .expect("Failed to parse statement.");
-
-    for pomodoro in pomodoro_iter {
-        if let Ok((start_time, completion_time)) = pomodoro {
-            println!("Start Time: {}, End Time: {}", start_time, completion_time);
-        }
-    }
-}
-
-#[cfg(debug_assertions)]
-fn debug_print_records(timer_type: TimerType) {
-    let (table_name, debug_name) = match timer_type {
-        TimerType::Work => (POMODORO_TABLE_NAME, "Pomodoros"),
-        TimerType::ShortBreak => (SHORT_BREAK_TABLE_NAME, "Short breaks"),
-        TimerType::LongBreak => (LONG_BREAK_TABLE_NAME, "Long breaks"),
-    };
-
-    debug_print_records_from_today(table_name);
-    println!(
-        "{} today: {}",
-        debug_name,
-        debug_count_records_from_today(table_name)
-    );
 }
