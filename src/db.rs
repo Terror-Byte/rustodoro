@@ -30,9 +30,11 @@ const INSERT_SHORT_BREAK_QUERY: &str =
 const INSERT_LONG_BREAK_QUERY: &str =
     "INSERT INTO long_breaks (start_time, completion_time) VALUES (?1, ?2)";
 
-pub const POMODORO_TABLE_NAME: &str = "pomodoros";
-pub const SHORT_BREAK_TABLE_NAME: &str = "short_breaks";
-pub const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
+const POMODORO_TABLE_NAME: &str = "pomodoros";
+const SHORT_BREAK_TABLE_NAME: &str = "short_breaks";
+const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
+
+pub type SessionVector = Vec<(u64, u64)>;
 
 fn get_database_path() -> String {
     if !cfg!(debug_assertions) {
@@ -70,7 +72,7 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
 pub fn get_sessions(
     session_type: TimerType,
     timespan_opt: &Option<DisplayCommand>,
-) -> Result<Vec<(u64, u64)>> {
+) -> Result<SessionVector> {
     match timespan_opt {
         Some(timespan) => match timespan {
             DisplayCommand::Day => get_todays_sessions(session_type),
@@ -85,7 +87,7 @@ fn get_sessions_internal(
     session_type: TimerType,
     start_timestamp: i64,
     end_timestamp: i64,
-) -> Result<Vec<(u64, u64)>> {
+) -> Result<SessionVector> {
     let conn = Connection::open(get_database_path())?;
 
     let table_name = match session_type {
@@ -106,7 +108,7 @@ fn get_sessions_internal(
         Ok((start_time, completion_time))
     })?;
 
-    let mut session_vector: Vec<(u64, u64)> = Vec::new();
+    let mut session_vector: SessionVector = Vec::new();
 
     for session in session_iter {
         if let Ok((start_time, end_time)) = session {
@@ -117,7 +119,7 @@ fn get_sessions_internal(
     Ok(session_vector)
 }
 
-fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_todays_sessions(session_type: TimerType) -> Result<SessionVector> {
     let start_of_day = get_start_of_day_timestamp()?;
     let end_of_day = get_end_of_day_timestamp()?;
     let session_vector = get_sessions_internal(session_type, start_of_day, end_of_day)?;
@@ -125,7 +127,7 @@ fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     Ok(session_vector)
 }
 
-fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_weeks_sessions(session_type: TimerType) -> Result<SessionVector> {
     let start_of_week = get_start_of_week_timestamp()?;
     let end_of_week = get_end_of_week_timestamp()?;
     let session_vector = get_sessions_internal(session_type, start_of_week, end_of_week)?;
@@ -133,7 +135,7 @@ fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     Ok(session_vector)
 }
 
-fn get_months_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_months_sessions(session_type: TimerType) -> Result<SessionVector> {
     let start_of_month = get_start_of_month_timestamp()?;
     let end_of_month = get_end_of_month_timestamp()?;
     let session_vector = get_sessions_internal(session_type, start_of_month, end_of_month)?;

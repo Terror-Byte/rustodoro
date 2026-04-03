@@ -1,4 +1,5 @@
 use crate::args::DisplayCommand;
+use crate::db::SessionVector;
 use crate::error::{Error, Result};
 use crate::timer::TimerType;
 use chrono::{DateTime, Local, TimeZone};
@@ -82,7 +83,7 @@ fn format_time(minutes: u16, seconds: u16) -> String {
 
 // TODO: Put this in a submodule called session?
 pub fn print_sessions(
-    sessions: Vec<(u64, u64)>,
+    sessions: SessionVector,
     timer_type: TimerType,
     timespan: Option<DisplayCommand>,
 ) -> Result<()> {
@@ -122,7 +123,7 @@ fn print_summary_string(session_count: usize, session_type: TimerType, timespan:
 }
 
 fn print_sessions_without_date(
-    sessions: Vec<(u64, u64)>,
+    sessions: SessionVector,
     session_type: TimerType,
     timespan: DisplayCommand,
 ) -> Result<()> {
@@ -169,7 +170,7 @@ fn print_sessions_without_date(
 }
 
 fn print_sessions_with_date(
-    sessions: Vec<(u64, u64)>,
+    sessions: SessionVector,
     session_type: TimerType,
     timespan: DisplayCommand,
 ) -> Result<()> {
