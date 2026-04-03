@@ -69,12 +69,13 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
-// TODO: Could cut out the querying stuff into its own function, and these functions could just be
-// used to set the timestamps to query with?
-pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+fn get_sessions(
+    session_type: TimerType,
+    start_timestamp: i64,
+    end_timestamp: i64,
+) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
-    let midnight_today = get_start_of_day_timestamp()?;
-    let midnight_tomorrow = get_end_of_day_timestamp()?;
+
     let table_name = match session_type {
         TimerType::Work => POMODORO_TABLE_NAME,
         TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
@@ -82,7 +83,7 @@ pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     };
     let query = format!(
         "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-        table_name, midnight_today, midnight_tomorrow
+        table_name, start_timestamp, end_timestamp
     );
 
     let mut statement = conn.prepare(query.as_str())?;
@@ -100,72 +101,30 @@ pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
             session_vector.push((start_time, end_time))
         }
     }
+
+    Ok(session_vector)
+}
+
+pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+    let start_of_day = get_start_of_day_timestamp()?;
+    let end_of_day = get_end_of_day_timestamp()?;
+    let session_vector = get_sessions(session_type, start_of_day, end_of_day)?;
 
     Ok(session_vector)
 }
 
 pub fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
-    let conn = Connection::open(get_database_path())?;
     let start_of_week = get_start_of_week_timestamp()?;
     let end_of_week = get_end_of_week_timestamp()?;
-    let table_name = match session_type {
-        TimerType::Work => POMODORO_TABLE_NAME,
-        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
-        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
-    };
-    let query = format!(
-        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-        table_name, start_of_week, end_of_week
-    );
-
-    let mut statement = conn.prepare(query.as_str())?;
-
-    let session_iter = statement.query_map([], |row| {
-        let start_time: u64 = row.get(0)?;
-        let completion_time: u64 = row.get(1)?;
-        Ok((start_time, completion_time))
-    })?;
-
-    let mut session_vector: Vec<(u64, u64)> = Vec::new();
-
-    for session in session_iter {
-        if let Ok((start_time, end_time)) = session {
-            session_vector.push((start_time, end_time))
-        }
-    }
+    let session_vector = get_sessions(session_type, start_of_week, end_of_week)?;
 
     Ok(session_vector)
 }
 
 pub fn get_months_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
-    let conn = Connection::open(get_database_path())?;
     let start_of_month = get_start_of_month_timestamp()?;
     let end_of_month = get_end_of_month_timestamp()?;
-    let table_name = match session_type {
-        TimerType::Work => POMODORO_TABLE_NAME,
-        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
-        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
-    };
-    let query = format!(
-        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
-        table_name, start_of_month, end_of_month
-    );
-
-    let mut statement = conn.prepare(query.as_str())?;
-
-    let session_iter = statement.query_map([], |row| {
-        let start_time: u64 = row.get(0)?;
-        let completion_time: u64 = row.get(1)?;
-        Ok((start_time, completion_time))
-    })?;
-
-    let mut session_vector: Vec<(u64, u64)> = Vec::new();
-
-    for session in session_iter {
-        if let Ok((start_time, end_time)) = session {
-            session_vector.push((start_time, end_time))
-        }
-    }
+    let session_vector = get_sessions(session_type, start_of_month, end_of_month)?;
 
     Ok(session_vector)
 }
