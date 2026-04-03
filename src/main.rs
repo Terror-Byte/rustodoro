@@ -5,10 +5,10 @@ mod error;
 mod timer;
 
 use args::{DisplayPomodorosCommand, RustodoroArgs, RustodoroCommand};
-use chrono::{Local, TimeZone};
+use chrono::{DateTime, Local, TimeZone};
 use clap::Parser;
 use config::Config;
-use error::Result;
+use error::{Error, Result};
 use timer::TimerType;
 
 fn main() -> Result<()> {
@@ -77,9 +77,18 @@ fn main() -> Result<()> {
 
                 let mut i = 1;
                 for pomodoro in todays_pomodoros {
-                    // TODO: Replace .unwrap() with ?
-                    let start_time = Local.timestamp_opt(pomodoro.0 as i64, 0).unwrap();
-                    let end_time = Local.timestamp_opt(pomodoro.1 as i64, 0).unwrap();
+                    let start_time: DateTime<Local> = Local
+                        .timestamp_opt(pomodoro.0 as i64, 0)
+                        .single()
+                        .ok_or(Error::DateTimeError(String::from(
+                            "Failed to parse timestamp as a valid datetime!",
+                        )))?;
+                    let end_time: DateTime<Local> = Local
+                        .timestamp_opt(pomodoro.1 as i64, 0)
+                        .single()
+                        .ok_or(Error::DateTimeError(String::from(
+                            "Failed to parse timestamp as a valid datetime!",
+                        )))?;
                     println!(
                         "| {0: <10} | {1: <10} | {2: <10} |",
                         i,
@@ -89,7 +98,52 @@ fn main() -> Result<()> {
                     i += 1;
                 }
             }
-            DisplayPomodorosCommand::Week => println!("Week"),
+            DisplayPomodorosCommand::Week => {
+                let weeks_pomodoros = db::get_weeks_sessions(TimerType::Work)?;
+                println!(
+                    "You have completed {} pomodoros this week.\n",
+                    weeks_pomodoros.len()
+                );
+
+                // TODO: Find a library to print this as a nice table?
+                println!(
+                    "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+                    "session", "date", "start time", "end time"
+                );
+                println!(
+                    "| {} | {} | {} | {} |",
+                    "-".repeat(10),
+                    "-".repeat(10),
+                    "-".repeat(10),
+                    "-".repeat(10),
+                );
+
+                // TODO: Do we number them by-day, or by week overall?
+                let mut i = 1;
+                for pomodoro in weeks_pomodoros {
+                    let start_time: DateTime<Local> = Local
+                        .timestamp_opt(pomodoro.0 as i64, 0)
+                        .single()
+                        .ok_or(Error::DateTimeError(String::from(
+                            "Failed to parse timestamp as a valid datetime!",
+                        )))?;
+                    let end_time: DateTime<Local> = Local
+                        .timestamp_opt(pomodoro.1 as i64, 0)
+                        .single()
+                        .ok_or(Error::DateTimeError(String::from(
+                            "Failed to parse timestamp as a valid datetime!",
+                        )))?;
+                    println!(
+                        "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+                        i,
+                        start_time.format("%Y-%m-%d"),
+                        start_time.format("%H:%M:%S"),
+                        end_time.format("%H:%M:%S")
+                    );
+                    i += 1;
+                }
+            }
+
             DisplayPomodorosCommand::Month => println!("Month"),
         },
     }

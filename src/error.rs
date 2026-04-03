@@ -9,6 +9,7 @@ pub enum Error {
     SystemTimeError(std::time::SystemTimeError),
     SQLError(rusqlite::Error),
     ConfigError(String),
+    DateTimeError(String),
 }
 
 impl fmt::Debug for Error {
@@ -20,6 +21,7 @@ impl fmt::Debug for Error {
             Error::SystemTimeError(e) => write!(f, "System Time Error - {}", e),
             Error::SQLError(e) => write!(f, "SQL Error - {}", e),
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
+            Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
         }
     }
 }
@@ -33,6 +35,7 @@ impl fmt::Display for Error {
             Error::SystemTimeError(e) => write!(f, "System Time Error - {}", e),
             Error::SQLError(e) => write!(f, "SQL Error - {}", e),
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
+            Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
         }
     }
 }

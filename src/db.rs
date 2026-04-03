@@ -1,4 +1,4 @@
-use chrono::{Days, Local, NaiveTime};
+use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use directories::ProjectDirs;
 use rusqlite::{Connection, Result};
 
@@ -7,7 +7,7 @@ use crate::timer::TimerType;
 const DATABASE_NAME: &str = "rustodoro.db";
 const RELATIVE_DB_PATH: &str = "./rustodoro.db";
 
-// Queries
+// Table creation queries
 const CREATE_POMODORO_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS pomodoros (
             start_time INTEGER PRIMARY KEY,
             completion_time INTEGER NOT NULL
@@ -21,6 +21,7 @@ const CREATE_LONG_BREAK_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS long_bre
             completion_time INTEGER NOT NULL
     )";
 
+// Table insertion queries
 const INSERT_POMODORO_QUERY: &str =
     "INSERT INTO pomodoros (start_time, completion_time) VALUES (?1, ?2)";
 const INSERT_SHORT_BREAK_QUERY: &str =
@@ -70,8 +71,8 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
 
 pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
-    let midnight_today = get_todays_date_midnight()?;
-    let midnight_tomorrow = get_tomorrows_date_midnight()?;
+    let midnight_today = get_start_of_day_timestamp()?;
+    let midnight_tomorrow = get_end_of_day_timestamp()?;
     let table_name = match session_type {
         TimerType::Work => POMODORO_TABLE_NAME,
         TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
@@ -101,28 +102,106 @@ pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     Ok(session_vector)
 }
 
+pub fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+    let conn = Connection::open(get_database_path())?;
+    let start_of_week = get_start_of_week_timestamp()?;
+    let end_of_week = get_end_of_week_timestamp()?;
+    let table_name = match session_type {
+        TimerType::Work => POMODORO_TABLE_NAME,
+        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
+        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
+    };
+    let query = format!(
+        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
+        table_name, start_of_week, end_of_week
+    );
+
+    let mut statement = conn.prepare(query.as_str())?;
+
+    let session_iter = statement.query_map([], |row| {
+        let start_time: u64 = row.get(0)?;
+        let completion_time: u64 = row.get(1)?;
+        Ok((start_time, completion_time))
+    })?;
+
+    let mut session_vector: Vec<(u64, u64)> = Vec::new();
+
+    for session in session_iter {
+        if let Ok((start_time, end_time)) = session {
+            session_vector.push((start_time, end_time))
+        }
+    }
+
+    Ok(session_vector)
+}
+
 // Timing Stuff
-fn get_todays_date_midnight() -> Result<i64> {
-    // TODO: Replace unwrap() with ?
+fn get_start_of_day_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
     let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
     let local = Local::now().with_time(midnight).unwrap();
     Ok(local.timestamp())
 }
 
-fn get_tomorrows_date_midnight() -> Result<i64> {
-    // TODO: Replace unwrap() with ?
-    let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
-    let local = Local::now().with_time(midnight).unwrap();
-    let local = local.checked_add_days(Days::new(1)).unwrap();
+fn get_end_of_day_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
+    // Instead of getting midnight tomorrow, could get 23:59:59 today?
+    // let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    // let local = Local::now().with_time(midnight).unwrap();
+    // let local = local.checked_add_days(Days::new(1)).unwrap();
+    let midnight_tonight = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+    let local = Local::now().with_time(midnight_tonight).unwrap();
     Ok(local.timestamp())
+}
+
+fn get_start_of_week_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
+
+    // Get midnight
+    let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+
+    // Get current datetime
+    let now = Local::now();
+
+    // Get the start of the week
+    let current_year = now.year();
+    let current_week = now.iso_week().week();
+    let start_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Mon)
+        .unwrap()
+        .and_time(midnight);
+
+    let result = Local.from_local_datetime(&start_of_week).unwrap();
+
+    Ok(result.timestamp())
+}
+
+fn get_end_of_week_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
+
+    // Get midnight
+    let midnight_tonight = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+
+    // Get current datetime
+    let now = Local::now();
+
+    // Get the end of the week
+    let current_year = now.year();
+    let current_week = now.iso_week().week();
+    let end_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Sun)
+        .unwrap()
+        .and_time(midnight_tonight);
+
+    let result = Local.from_local_datetime(&end_of_week).unwrap();
+
+    Ok(result.timestamp())
 }
 
 // Debug Print Functions (move these to their own file? Or just remove eventually?)
 // Might not need these anymore now, as we've got session printing commands in the works?
 #[cfg(debug_assertions)]
 pub fn debug_print_records_from_today(table: &str) {
-    let midnight_today = get_todays_date_midnight().unwrap();
-    let midnight_tomorrow = get_tomorrows_date_midnight().unwrap();
+    let midnight_today = get_start_of_day_timestamp().unwrap();
+    let midnight_tomorrow = get_end_of_day_timestamp().unwrap();
     execute_statement(
         format!(
             "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
@@ -137,8 +216,8 @@ pub fn debug_count_records_from_today(table: &str) -> u64 {
     let mut res = 0;
     let conn = Connection::open(RELATIVE_DB_PATH).unwrap();
 
-    let midnight_today = get_todays_date_midnight().unwrap();
-    let midnight_tomorrow = get_tomorrows_date_midnight().unwrap();
+    let midnight_today = get_start_of_day_timestamp().unwrap();
+    let midnight_tomorrow = get_end_of_day_timestamp().unwrap();
 
     let mut statement = conn
         .prepare(
