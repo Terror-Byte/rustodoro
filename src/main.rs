@@ -75,40 +75,53 @@ fn print_sessions(subcommand: Option<DisplayCommand>, session_type: TimerType) -
         Some(subcommand) => match subcommand {
             DisplayCommand::Day => {
                 let sessions = db::get_todays_sessions(session_type)?;
-                print_days_sessions(sessions, session_type)?;
+                print_sessions_without_date(sessions, session_type, subcommand)?;
             }
             DisplayCommand::Week => {
                 let sessions = db::get_weeks_sessions(session_type)?;
-                print_weeks_sessions(sessions, session_type)?;
+                print_sessions_with_date(sessions, session_type, subcommand)?;
             }
             DisplayCommand::Month => {
                 let sessions = db::get_months_sessions(session_type)?;
-                print_months_sessions(sessions, session_type)?;
+                print_sessions_with_date(sessions, session_type, subcommand)?;
             }
         },
         None => {
             let sessions = db::get_todays_sessions(session_type)?;
-            print_days_sessions(sessions, session_type)?;
+            print_sessions_without_date(sessions, session_type, DisplayCommand::Day)?;
         }
     }
 
     Ok(())
 }
 
-fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
+fn print_summary_string(session_count: usize, session_type: TimerType, timespan: DisplayCommand) {
     let session_name = match session_type {
         TimerType::Work => "pomodoro(s)",
         TimerType::ShortBreak => "short break(s)",
         TimerType::LongBreak => "long break(s)",
     };
 
-    println!(
-        "You have completed {} {} today.\n",
-        sessions.len(),
-        session_name
-    );
+    let timespan_string = match timespan {
+        DisplayCommand::Day => "today",
+        DisplayCommand::Week => "this week",
+        DisplayCommand::Month => "this month",
+    };
 
-    // TODO: Find a library to print this as a nice table?
+    println!(
+        "You completed {} {} {}.\n",
+        session_count, session_name, timespan_string,
+    );
+}
+
+fn print_sessions_without_date(
+    sessions: Vec<(u64, u64)>,
+    session_type: TimerType,
+    timespan: DisplayCommand,
+) -> Result<()> {
+    print_summary_string(sessions.len(), session_type, timespan);
+
+    // TODO: Find a library to print this as a nice table? Can I use crossterm?
     println!(
         "| {:^10} | {:^10} | {:^10} |",
         "session", "start time", "end time"
@@ -148,20 +161,14 @@ fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Re
     Ok(())
 }
 
-fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
-    let session_name = match session_type {
-        TimerType::Work => "pomodoro(s)",
-        TimerType::ShortBreak => "short break(s)",
-        TimerType::LongBreak => "long break(s)",
-    };
+fn print_sessions_with_date(
+    sessions: Vec<(u64, u64)>,
+    session_type: TimerType,
+    timespan: DisplayCommand,
+) -> Result<()> {
+    print_summary_string(sessions.len(), session_type, timespan);
 
-    println!(
-        "You have completed {} {} this week.\n",
-        sessions.len(),
-        session_name
-    );
-
-    // TODO: Find a library to print this as a nice table?
+    // TODO: Find a library to print this as a nice table? Can I use crossterm?
     println!(
         "| {:^10} | {:^10} | {:^10} | {:^10} |",
         "session", "date", "start time", "end time"
@@ -175,64 +182,6 @@ fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> R
     );
 
     // TODO: Do we number them by-day, or by week overall?
-    let mut i = 1;
-    for session in sessions {
-        let start_time: DateTime<Local> =
-            Local
-                .timestamp_opt(session.0 as i64, 0)
-                .single()
-                .ok_or(Error::DateTimeError(String::from(
-                    "Failed to parse timestamp as a valid datetime!",
-                )))?;
-        let end_time: DateTime<Local> =
-            Local
-                .timestamp_opt(session.1 as i64, 0)
-                .single()
-                .ok_or(Error::DateTimeError(String::from(
-                    "Failed to parse timestamp as a valid datetime!",
-                )))?;
-        println!(
-            "| {:^10} | {:^10} | {:^10} | {:^10} |",
-            i,
-            start_time.format("%Y-%m-%d"),
-            start_time.format("%H:%M:%S"),
-            end_time.format("%H:%M:%S")
-        );
-        i += 1;
-    }
-
-    Ok(())
-}
-
-// TODO: This could probably be combined with the function for printing weeks?
-fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
-    let session_name = match session_type {
-        TimerType::Work => "pomodoro(s)",
-        TimerType::ShortBreak => "short break(s)",
-        TimerType::LongBreak => "long break(s)",
-    };
-
-    println!(
-        "You have completed {} {} this month.\n",
-        sessions.len(),
-        session_name
-    );
-
-    // TODO: Find a library to print this as a nice table?
-    println!(
-        "| {:^10} | {:^10} | {:^10} | {:^10} |",
-        "session", "date", "start time", "end time"
-    );
-    println!(
-        "| {} | {} | {} | {} |",
-        "-".repeat(10),
-        "-".repeat(10),
-        "-".repeat(10),
-        "-".repeat(10),
-    );
-
-    // TODO: Do we number them by-day, or by month overall?
-    // Should we delimit the pomodoros by day, also?
     let mut i = 1;
     for session in sessions {
         let start_time: DateTime<Local> =
