@@ -87,7 +87,7 @@ pub struct SetLogToDBArgs {
 #[derive(Debug, Args)]
 pub struct DisplayPomodorosArgs {
     #[command(subcommand)]
-    pub command: DisplayPomodorosCommand,
+    pub subcommand: Option<DisplayPomodorosCommand>,
 }
 
 #[derive(Debug, Subcommand)]

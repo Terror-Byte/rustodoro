@@ -55,18 +55,24 @@ fn main() -> Result<()> {
             let new_config = config.set_log_to_db(command);
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::DisplayPomodoros(command) => match command.command {
-            DisplayPomodorosCommand::Day => {
+        RustodoroCommand::DisplayPomodoros(command) => match command.subcommand {
+            Some(subcommand) => match subcommand {
+                DisplayPomodorosCommand::Day => {
+                    let sessions = db::get_todays_sessions(TimerType::Work)?;
+                    print_days_sessions(sessions, TimerType::Work)?;
+                }
+                DisplayPomodorosCommand::Week => {
+                    let sessions = db::get_weeks_sessions(TimerType::Work)?;
+                    print_weeks_sessions(sessions, TimerType::Work)?;
+                }
+                DisplayPomodorosCommand::Month => {
+                    let sessions = db::get_months_sessions(TimerType::Work)?;
+                    print_months_sessions(sessions, TimerType::Work)?;
+                }
+            },
+            None => {
                 let sessions = db::get_todays_sessions(TimerType::Work)?;
                 print_days_sessions(sessions, TimerType::Work)?;
-            }
-            DisplayPomodorosCommand::Week => {
-                let sessions = db::get_weeks_sessions(TimerType::Work)?;
-                print_weeks_sessions(sessions, TimerType::Work)?;
-            }
-            DisplayPomodorosCommand::Month => {
-                let sessions = db::get_months_sessions(TimerType::Work)?;
-                print_months_sessions(sessions, TimerType::Work)?;
             }
         },
     }
@@ -74,6 +80,7 @@ fn main() -> Result<()> {
     Ok(())
 }
 
+// TODO: Can these functions go in their own module, to tidy up the main file?
 fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
     let session_name = match session_type {
         TimerType::Work => "pomodoros",
@@ -89,7 +96,7 @@ fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Re
 
     // TODO: Find a library to print this as a nice table?
     println!(
-        "| {0: <10} | {1: <10} | {2: <10} |",
+        "| {:^10} | {:^10} | {:^10} |",
         "session", "start time", "end time"
     );
     println!(
@@ -116,7 +123,7 @@ fn print_days_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Re
                     "Failed to parse timestamp as a valid datetime!",
                 )))?;
         println!(
-            "| {0: <10} | {1: <10} | {2: <10} |",
+            "| {:^10} | {:^10} | {:^10} |",
             i,
             start_time.format("%H:%M:%S"),
             end_time.format("%H:%M:%S")
@@ -142,7 +149,7 @@ fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> R
 
     // TODO: Find a library to print this as a nice table?
     println!(
-        "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+        "| {:^10} | {:^10} | {:^10} | {:^10} |",
         "session", "date", "start time", "end time"
     );
     println!(
@@ -171,7 +178,7 @@ fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> R
                     "Failed to parse timestamp as a valid datetime!",
                 )))?;
         println!(
-            "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+            "| {:^10} | {:^10} | {:^10} | {:^10} |",
             i,
             start_time.format("%Y-%m-%d"),
             start_time.format("%H:%M:%S"),
@@ -199,7 +206,7 @@ fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> 
 
     // TODO: Find a library to print this as a nice table?
     println!(
-        "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+        "| {:^10} | {:^10} | {:^10} | {:^10} |",
         "session", "date", "start time", "end time"
     );
     println!(
@@ -211,6 +218,7 @@ fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> 
     );
 
     // TODO: Do we number them by-day, or by month overall?
+    // Should we delimit the pomodoros by day, also?
     let mut i = 1;
     for session in sessions {
         let start_time: DateTime<Local> =
@@ -228,7 +236,7 @@ fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> 
                     "Failed to parse timestamp as a valid datetime!",
                 )))?;
         println!(
-            "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+            "| {:^10} | {:^10} | {:^10} | {:^10} |",
             i,
             start_time.format("%Y-%m-%d"),
             start_time.format("%H:%M:%S"),
