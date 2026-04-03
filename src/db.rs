@@ -68,7 +68,6 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
-// TODO: Tidy this function up
 pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
     let midnight_today = get_todays_date_midnight()?;
@@ -83,19 +82,13 @@ pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
         table_name, midnight_today, midnight_tomorrow
     );
 
-    // TODO: Replace expect() with ?
-    let mut statement = conn
-        .prepare(query.as_str())
-        .expect(format!("Failed to prepare query for table {}", table_name).as_str());
+    let mut statement = conn.prepare(query.as_str())?;
 
-    // TODO: Replace expect() with ?
-    let session_iter = statement
-        .query_map([], |row| {
-            let start_time: u64 = row.get(0).expect("foo");
-            let completion_time: u64 = row.get(1).expect("bar");
-            Ok((start_time, completion_time))
-        })
-        .expect("Failed to parse statement");
+    let session_iter = statement.query_map([], |row| {
+        let start_time: u64 = row.get(0)?;
+        let completion_time: u64 = row.get(1)?;
+        Ok((start_time, completion_time))
+    })?;
 
     let mut session_vector: Vec<(u64, u64)> = Vec::new();
 
@@ -125,6 +118,7 @@ fn get_tomorrows_date_midnight() -> Result<i64> {
 }
 
 // Debug Print Functions (move these to their own file? Or just remove eventually?)
+// Might not need these anymore now, as we've got session printing commands in the works?
 #[cfg(debug_assertions)]
 pub fn debug_print_records_from_today(table: &str) {
     let midnight_today = get_todays_date_midnight().unwrap();
