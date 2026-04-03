@@ -69,6 +69,8 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
+// TODO: Could cut out the querying stuff into its own function, and these functions could just be
+// used to set the timestamps to query with?
 pub fn get_todays_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     let conn = Connection::open(get_database_path())?;
     let midnight_today = get_start_of_day_timestamp()?;
@@ -135,22 +137,51 @@ pub fn get_weeks_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
     Ok(session_vector)
 }
 
+pub fn get_months_sessions(session_type: TimerType) -> Result<Vec<(u64, u64)>> {
+    let conn = Connection::open(get_database_path())?;
+    let start_of_month = get_start_of_month_timestamp()?;
+    let end_of_month = get_end_of_month_timestamp()?;
+    let table_name = match session_type {
+        TimerType::Work => POMODORO_TABLE_NAME,
+        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
+        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
+    };
+    let query = format!(
+        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
+        table_name, start_of_month, end_of_month
+    );
+
+    let mut statement = conn.prepare(query.as_str())?;
+
+    let session_iter = statement.query_map([], |row| {
+        let start_time: u64 = row.get(0)?;
+        let completion_time: u64 = row.get(1)?;
+        Ok((start_time, completion_time))
+    })?;
+
+    let mut session_vector: Vec<(u64, u64)> = Vec::new();
+
+    for session in session_iter {
+        if let Ok((start_time, end_time)) = session {
+            session_vector.push((start_time, end_time))
+        }
+    }
+
+    Ok(session_vector)
+}
+
 // Timing Stuff
 fn get_start_of_day_timestamp() -> Result<i64> {
     // TODO: Replace unwrap with error propagation!
-    let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
-    let local = Local::now().with_time(midnight).unwrap();
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    let local = Local::now().with_time(start_of_day_timestamp).unwrap();
     Ok(local.timestamp())
 }
 
 fn get_end_of_day_timestamp() -> Result<i64> {
     // TODO: Replace unwrap with error propagation!
-    // Instead of getting midnight tomorrow, could get 23:59:59 today?
-    // let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
-    // let local = Local::now().with_time(midnight).unwrap();
-    // let local = local.checked_add_days(Days::new(1)).unwrap();
-    let midnight_tonight = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
-    let local = Local::now().with_time(midnight_tonight).unwrap();
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+    let local = Local::now().with_time(end_of_day_timestamp).unwrap();
     Ok(local.timestamp())
 }
 
@@ -158,7 +189,7 @@ fn get_start_of_week_timestamp() -> Result<i64> {
     // TODO: Replace unwrap with error propagation!
 
     // Get midnight
-    let midnight = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
 
     // Get current datetime
     let now = Local::now();
@@ -168,7 +199,7 @@ fn get_start_of_week_timestamp() -> Result<i64> {
     let current_week = now.iso_week().week();
     let start_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Mon)
         .unwrap()
-        .and_time(midnight);
+        .and_time(start_of_day_timestamp);
 
     let result = Local.from_local_datetime(&start_of_week).unwrap();
 
@@ -179,7 +210,7 @@ fn get_end_of_week_timestamp() -> Result<i64> {
     // TODO: Replace unwrap with error propagation!
 
     // Get midnight
-    let midnight_tonight = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
 
     // Get current datetime
     let now = Local::now();
@@ -189,9 +220,62 @@ fn get_end_of_week_timestamp() -> Result<i64> {
     let current_week = now.iso_week().week();
     let end_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Sun)
         .unwrap()
-        .and_time(midnight_tonight);
+        .and_time(end_of_day_timestamp);
 
     let result = Local.from_local_datetime(&end_of_week).unwrap();
+
+    Ok(result.timestamp())
+}
+
+fn get_start_of_month_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
+
+    // Get midnight
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+
+    // Get current datetime
+    let now = Local::now();
+
+    // Get the start of the month
+    let current_year = now.year();
+    let current_month = now.month();
+    let start_of_month = NaiveDate::from_ymd_opt(current_year, current_month, 1)
+        .unwrap()
+        .and_time(start_of_day_timestamp);
+
+    let result = Local.from_local_datetime(&start_of_month).unwrap();
+
+    Ok(result.timestamp())
+}
+
+fn get_end_of_month_timestamp() -> Result<i64> {
+    // TODO: Replace unwrap with error propagation!
+
+    // Get midnight
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+
+    // Get current datetime
+    let now = Local::now();
+
+    // Get the end of the month
+    let current_year = now.year();
+    let current_month = now.month();
+    // Wonky way to get the last day of the month (can this be improved?)
+    let end_of_month = if current_month < 12 {
+        NaiveDate::from_ymd_opt(current_year, current_month + 1, 1)
+            .unwrap()
+            .pred_opt()
+            .unwrap()
+            .and_time(end_of_day_timestamp)
+    } else {
+        NaiveDate::from_ymd_opt(current_year + 1, 1, 1)
+            .unwrap()
+            .pred_opt()
+            .unwrap()
+            .and_time(end_of_day_timestamp)
+    };
+
+    let result = Local.from_local_datetime(&end_of_month).unwrap();
 
     Ok(result.timestamp())
 }

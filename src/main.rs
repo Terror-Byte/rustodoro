@@ -64,7 +64,10 @@ fn main() -> Result<()> {
                 let sessions = db::get_weeks_sessions(TimerType::Work)?;
                 print_weeks_sessions(sessions, TimerType::Work)?;
             }
-            DisplayPomodorosCommand::Month => println!("Month"),
+            DisplayPomodorosCommand::Month => {
+                let sessions = db::get_months_sessions(TimerType::Work)?;
+                print_months_sessions(sessions, TimerType::Work)?;
+            }
         },
     }
 
@@ -151,6 +154,63 @@ fn print_weeks_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> R
     );
 
     // TODO: Do we number them by-day, or by week overall?
+    let mut i = 1;
+    for session in sessions {
+        let start_time: DateTime<Local> =
+            Local
+                .timestamp_opt(session.0 as i64, 0)
+                .single()
+                .ok_or(Error::DateTimeError(String::from(
+                    "Failed to parse timestamp as a valid datetime!",
+                )))?;
+        let end_time: DateTime<Local> =
+            Local
+                .timestamp_opt(session.1 as i64, 0)
+                .single()
+                .ok_or(Error::DateTimeError(String::from(
+                    "Failed to parse timestamp as a valid datetime!",
+                )))?;
+        println!(
+            "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+            i,
+            start_time.format("%Y-%m-%d"),
+            start_time.format("%H:%M:%S"),
+            end_time.format("%H:%M:%S")
+        );
+        i += 1;
+    }
+
+    Ok(())
+}
+
+// TODO: This could probably be combined with the function for printing weeks?
+fn print_months_sessions(sessions: Vec<(u64, u64)>, session_type: TimerType) -> Result<()> {
+    let session_name = match session_type {
+        TimerType::Work => "pomodoros",
+        TimerType::ShortBreak => "short breaks",
+        TimerType::LongBreak => "long breaks",
+    };
+
+    println!(
+        "You have completed {} {} this month.\n",
+        sessions.len(),
+        session_name
+    );
+
+    // TODO: Find a library to print this as a nice table?
+    println!(
+        "| {0: <10} | {1: <10} | {2: <10} | {3: <10} |",
+        "session", "date", "start time", "end time"
+    );
+    println!(
+        "| {} | {} | {} | {} |",
+        "-".repeat(10),
+        "-".repeat(10),
+        "-".repeat(10),
+        "-".repeat(10),
+    );
+
+    // TODO: Do we number them by-day, or by month overall?
     let mut i = 1;
     for session in sessions {
         let start_time: DateTime<Local> =
