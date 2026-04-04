@@ -74,17 +74,11 @@ impl Config {
         })
     }
 
-    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Result<Config> {
-        if args.pomodoros_to_long_break == 0 {
-            return Err(Error::ConfigError(
-                "Cannot set 'pomodoros to long break' to 0!".to_string(),
-            ));
-        }
-
-        Ok(Config {
+    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Config {
+        Config {
             pomodoros_to_long_break: args.pomodoros_to_long_break,
             ..self
-        })
+        }
     }
 
     pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {

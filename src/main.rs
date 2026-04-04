@@ -79,7 +79,7 @@ fn main() -> Result<()> {
             Config::save(&new_config, config_path.as_str())?;
         }
         RustodoroCommand::SetPomodorosToLongBreak(command) => {
-            let new_config = config.set_pomodoros_to_long_break(command)?;
+            let new_config = config.set_pomodoros_to_long_break(command);
             Config::save(&new_config, config_path.as_str())?;
         }
         RustodoroCommand::SetLogToDB(command) => {
