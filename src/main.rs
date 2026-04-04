@@ -27,7 +27,7 @@ fn main() -> Result<()> {
                 // If the amount of pomodoros completed since the last long break (or since the
                 // start of the day, if no long breaks have been taken yet) is equal to or greater
                 // than pomodoros_to_long_break, inform the user that they're due a long break
-                if config.pomodoros_to_long_break > 0 {
+                if config.log_to_db && config.pomodoros_to_long_break > 0 {
                     let latest_long_break = db::get_most_recent_session(TimerType::LongBreak)?;
                     let sessions = match latest_long_break {
                         Some(session) => {
@@ -87,18 +87,27 @@ fn main() -> Result<()> {
             Config::save(&new_config, config_path.as_str())?;
         }
         RustodoroCommand::DisplayPomodoros(command) => {
+            if !config.log_to_db {
+                println!("WARNING: Session logging is currently disabled, only displaying sessions completed whilst session logging enabled.\n");
+            }
             let timer_type = TimerType::Work;
             let timespan = command.subcommand;
             let sessions = db::get_sessions(timer_type, &timespan)?;
             display::print_sessions(sessions, timer_type, timespan)?;
         }
         RustodoroCommand::DisplayShortBreaks(command) => {
+            if !config.log_to_db {
+                println!("WARNING: Session logging is currently disabled, only displaying sessions completed whilst session logging enabled.\n");
+            }
             let timer_type = TimerType::ShortBreak;
             let timespan = command.subcommand;
             let sessions = db::get_sessions(timer_type, &timespan)?;
             display::print_sessions(sessions, timer_type, timespan)?;
         }
         RustodoroCommand::DisplayLongBreaks(command) => {
+            if !config.log_to_db {
+                println!("WARNING: Session logging is currently disabled, only displaying sessions completed whilst session logging enabled.\n");
+            }
             let timer_type = TimerType::LongBreak;
             let timespan = command.subcommand;
             let sessions = db::get_sessions(timer_type, &timespan)?;
