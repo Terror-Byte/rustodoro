@@ -1,6 +1,7 @@
 use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use directories::ProjectDirs;
 use rusqlite::Connection;
+use std::fs;
 use std::time::SystemTime;
 
 use crate::args::DisplayCommand;
@@ -38,18 +39,21 @@ const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
 
 pub type SessionVector = Vec<(u64, u64)>;
 
-fn get_database_path() -> String {
+fn get_database_path() -> Result<String> {
     if !cfg!(debug_assertions) {
         if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+            if !proj_dirs.data_dir().exists() {
+                fs::create_dir(proj_dirs.data_dir())?;
+            }
             if let Some(directory) = proj_dirs.data_dir().to_str() {
                 let mut dbpath = String::from(directory);
                 dbpath.push_str("/");
                 dbpath.push_str(DATABASE_NAME);
-                return dbpath;
+                return Ok(dbpath);
             }
         }
     }
-    String::from(RELATIVE_DB_PATH)
+    Ok(String::from(RELATIVE_DB_PATH))
 }
 
 pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerType) -> Result<()> {
@@ -59,7 +63,7 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
         TimerType::LongBreak => (CREATE_LONG_BREAK_TABLE_QUERY, INSERT_LONG_BREAK_QUERY),
     };
 
-    let conn = Connection::open(get_database_path())?;
+    let conn = Connection::open(get_database_path()?)?;
 
     // Create table if it doesn't exist
     conn.execute(create_table_query, ())?;
@@ -90,7 +94,7 @@ fn get_sessions_internal(
     start_timestamp: i64,
     end_timestamp: i64,
 ) -> Result<SessionVector> {
-    let conn = Connection::open(get_database_path())?;
+    let conn = Connection::open(get_database_path()?)?;
 
     let table_name = match session_type {
         TimerType::Work => POMODORO_TABLE_NAME,
@@ -304,7 +308,7 @@ fn get_end_of_month_timestamp() -> Result<i64> {
 }
 
 pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
-    let conn = Connection::open(get_database_path())?;
+    let conn = Connection::open(get_database_path()?)?;
 
     let start_timestamp = get_start_of_day_timestamp()?;
     let end_timestamp = get_end_of_day_timestamp()?;
