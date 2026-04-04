@@ -24,39 +24,32 @@ fn main() -> Result<()> {
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::Work)?;
 
-                // Query long break table to get the most recent long break (within the same day?)
-                // What if there haven't been any long breaks today? Start the countdown anyway?
-                // Query the work sessions since the beginning of the day?
+                // If the amount of pomodoros completed since the last long break (or since the
+                // start of the day, if no long breaks have been taken yet) is equal to or greater
+                // than pomodoros_to_long_break, inform the user that they're due a long break
                 if config.pomodoros_to_long_break > 0 {
                     let latest_long_break = db::get_most_recent_session(TimerType::LongBreak)?;
-                    match latest_long_break {
+                    let sessions = match latest_long_break {
                         Some(session) => {
                             let sessions =
                                 db::get_sessions_since(TimerType::Work, session.1 as i64)?;
-
-                            if sessions.len() >= config.pomodoros_to_long_break as usize {
-                                print!("You're due a long break!");
-                            } else {
-                                let delta = config.pomodoros_to_long_break - sessions.len() as u8;
-                                print!(
-                                    "You've got {} pomodoros before you're due a long break!",
-                                    delta
-                                );
-                            }
+                            sessions
                         }
                         None => {
                             let timespan = DisplayCommand::Day;
                             let sessions = db::get_sessions(TimerType::Work, &Some(timespan))?;
-                            if sessions.len() >= config.pomodoros_to_long_break as usize {
-                                print!("You're due a long break!");
-                            } else {
-                                let delta = config.pomodoros_to_long_break - sessions.len() as u8;
-                                print!(
-                                    "You've got {} pomodoros before you're due a long break!",
-                                    delta
-                                );
-                            }
+                            sessions
                         }
+                    };
+
+                    if sessions.len() >= config.pomodoros_to_long_break as usize {
+                        print!("You're due a long break!");
+                    } else {
+                        let delta = config.pomodoros_to_long_break - sessions.len() as u8;
+                        print!(
+                            "You've got {} more pomodoros before you're due a long break!",
+                            delta
+                        );
                     }
                 }
             }
