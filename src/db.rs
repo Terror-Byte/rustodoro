@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use std::time::SystemTime;
 
 use crate::args::DisplayCommand;
-use crate::error::Result;
+use crate::error::{Error, Result};
 use crate::timer::TimerType;
 
 const DATABASE_NAME: &str = "rustodoro.db";
@@ -147,9 +147,15 @@ fn get_months_sessions(session_type: TimerType) -> Result<SessionVector> {
 
 // Timing Stuff
 fn get_start_of_day_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
-    let local = Local::now().with_time(start_of_day_timestamp).unwrap();
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_start_of_day_timestamp()] Failed to create NaiveTime timestamp"),
+    ))?;
+    let local = Local::now()
+        .with_time(start_of_day_timestamp)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+            "[db::get_start_of_day_timestamp()] Failed to parse start_of_day_timestamp as DateTime<Local>",
+        )))?;
     Ok(local.timestamp())
 }
 
@@ -235,6 +241,7 @@ fn get_end_of_month_timestamp() -> Result<i64> {
     // Get the end of the month
     let current_year = now.year();
     let current_month = now.month();
+
     // Wonky way to get the last day of the month (can this be improved?)
     let end_of_month = if current_month < 12 {
         NaiveDate::from_ymd_opt(current_year, current_month + 1, 1)

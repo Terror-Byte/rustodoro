@@ -10,6 +10,7 @@ pub enum Error {
     SQLError(rusqlite::Error),
     ConfigError(String),
     DateTimeError(String),
+    NaiveTimeError(String),
 }
 
 impl fmt::Debug for Error {
@@ -22,6 +23,7 @@ impl fmt::Debug for Error {
             Error::SQLError(e) => write!(f, "SQL Error - {}", e),
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
+            Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
         }
     }
 }
@@ -36,6 +38,7 @@ impl fmt::Display for Error {
             Error::SQLError(e) => write!(f, "SQL Error - {}", e),
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
+            Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
         }
     }
 }
