@@ -16,6 +16,7 @@ pub struct Config {
     pub short_break_time: u16,
     pub long_break_time: u16,
     pub pomodoros_to_long_break: u8,
+    #[serde(default)]
     pub log_to_db: bool,
 }
 
@@ -96,7 +97,7 @@ impl Default for Config {
             short_break_time: 300,
             long_break_time: 900,
             pomodoros_to_long_break: 4,
-            log_to_db: true,
+            log_to_db: false,
         }
     }
 }

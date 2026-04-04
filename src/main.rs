@@ -28,7 +28,9 @@ fn main() -> Result<()> {
                 // start of the day, if no long breaks have been taken yet) is equal to or greater
                 // than pomodoros_to_long_break, inform the user that they're due a long break
                 if config.log_to_db && config.pomodoros_to_long_break > 0 {
-                    let latest_long_break = db::get_most_recent_session(TimerType::LongBreak)?;
+                    // If there's no long break table, we don't want to print the SQL error to the user
+                    let latest_long_break =
+                        db::get_most_recent_session(TimerType::LongBreak).unwrap_or(None);
                     let sessions = match latest_long_break {
                         Some(session) => {
                             let sessions =
