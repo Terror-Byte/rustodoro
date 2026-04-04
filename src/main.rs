@@ -21,6 +21,28 @@ fn main() -> Result<()> {
             let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::Work)?;
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::Work)?;
+
+                // Query long break table to get the most recent long break (within the same day?)
+                if config.pomodoros_to_long_break > 0 {
+                    let latest_long_break = db::get_most_recent_session(TimerType::LongBreak)?;
+                    match latest_long_break {
+                        Some(session) => {
+                            let sessions =
+                                db::get_sessions_since(TimerType::Work, session.1 as i64)?;
+
+                            if sessions.len() >= config.pomodoros_to_long_break as usize {
+                                print!("You're due a long break!");
+                            } else {
+                                let delta = config.pomodoros_to_long_break - sessions.len() as u8;
+                                print!(
+                                    "You've got {} pomodoros before you're due a long break!",
+                                    delta
+                                );
+                            }
+                        }
+                        None => print!("No long breaks taken today"),
+                    }
+                }
             }
         }
         RustodoroCommand::ShortBreak => {

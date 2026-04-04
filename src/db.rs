@@ -1,8 +1,10 @@
 use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use directories::ProjectDirs;
-use rusqlite::{Connection, Result};
+use rusqlite::Connection;
+use std::time::SystemTime;
 
 use crate::args::DisplayCommand;
+use crate::error::Result;
 use crate::timer::TimerType;
 
 const DATABASE_NAME: &str = "rustodoro.db";
@@ -251,4 +253,59 @@ fn get_end_of_month_timestamp() -> Result<i64> {
     let result = Local.from_local_datetime(&end_of_month).unwrap();
 
     Ok(result.timestamp())
+}
+
+pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
+    let conn = Connection::open(get_database_path())?;
+
+    let start_timestamp = get_start_of_day_timestamp()?;
+    let end_timestamp = get_end_of_day_timestamp()?;
+
+    let table_name = match session_type {
+        TimerType::Work => POMODORO_TABLE_NAME,
+        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
+        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
+    };
+    let query = format!(
+        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {} ORDER BY start_time DESC LIMIT 1",
+        table_name, start_timestamp, end_timestamp
+    );
+
+    let mut statement = conn.prepare(query.as_str())?;
+
+    let session_iter = statement.query_map([], |row| {
+        let start_time: u64 = row.get(0)?;
+        let completion_time: u64 = row.get(1)?;
+        Ok((start_time, completion_time))
+    })?;
+
+    let mut session_vector: SessionVector = Vec::new();
+
+    for session in session_iter {
+        if let Ok((start_time, end_time)) = session {
+            session_vector.push((start_time, end_time))
+        }
+    }
+
+    // TODO: Is there a more elegant way to get just one result? Do we need the result vector?
+    if session_vector.len() > 0 {
+        let result = session_vector[0];
+        return Ok(Some(result));
+    } else {
+        return Ok(None);
+    }
+}
+
+pub fn get_sessions_since(session_type: TimerType, start_timestamp: i64) -> Result<SessionVector> {
+    let end_timestamp = get_current_unix_time()? as i64;
+    let session_vector = get_sessions_internal(session_type, start_timestamp, end_timestamp)?;
+    Ok(session_vector)
+}
+
+// TODO: This is a duplicate of the function in timer.rs, do we want to make that one public or
+// move it to a utility module?
+fn get_current_unix_time() -> Result<u64> {
+    Ok(SystemTime::now()
+        .duration_since(SystemTime::UNIX_EPOCH)?
+        .as_secs())
 }
