@@ -160,17 +160,24 @@ fn get_start_of_day_timestamp() -> Result<i64> {
 }
 
 fn get_end_of_day_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
-    let local = Local::now().with_time(end_of_day_timestamp).unwrap();
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_end_of_day_timestamp()] Failed to create NaiveTime timestamp"),
+    ))?;
+
+    let local = Local::now().with_time(end_of_day_timestamp)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+            "[db::get_end_of_day_timestamp()] Failed to parse start_of_day_timestamp as DateTime<Local>",
+        )))?;
+
     Ok(local.timestamp())
 }
 
 fn get_start_of_week_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-
     // Get midnight
-    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_start_of_week_timestamp()] Failed to create start_of_day_timestamp NaiveTime timestamp"),
+    ))?;
 
     // Get current datetime
     let now = Local::now();
@@ -179,19 +186,26 @@ fn get_start_of_week_timestamp() -> Result<i64> {
     let current_year = now.year();
     let current_week = now.iso_week().week();
     let start_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Mon)
-        .unwrap()
+        .ok_or(Error::NaiveTimeError(String::from(
+            "[db::get_start_of_week_timestamp()] Failed to create start_of_week NaiveDate value",
+        )))?
         .and_time(start_of_day_timestamp);
 
-    let result = Local.from_local_datetime(&start_of_week).unwrap();
+    let result = Local
+        .from_local_datetime(&start_of_week)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+            "[db::get_start_of_week_timestamp()] Failed to parse start_of_week as DateTime<Local>",
+        )))?;
 
     Ok(result.timestamp())
 }
 
 fn get_end_of_week_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-
     // Get midnight
-    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_end_of_week_timestamp()] Failed to create end_of_day_timestamp NaiveTime timestamp"),
+    ))?;
 
     // Get current datetime
     let now = Local::now();
@@ -200,19 +214,26 @@ fn get_end_of_week_timestamp() -> Result<i64> {
     let current_year = now.year();
     let current_week = now.iso_week().week();
     let end_of_week = NaiveDate::from_isoywd_opt(current_year, current_week, Weekday::Sun)
-        .unwrap()
+        .ok_or(Error::NaiveTimeError(String::from(
+            "[db::get_end_of_week_timestamp()] Failed to create end_of_week NaiveDate value",
+        )))?
         .and_time(end_of_day_timestamp);
 
-    let result = Local.from_local_datetime(&end_of_week).unwrap();
+    let result = Local
+        .from_local_datetime(&end_of_week)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+            "[db::get_end_of_week_timestamp()] Failed to parse end_of_week as DateTime<Local>",
+        )))?;
 
     Ok(result.timestamp())
 }
 
 fn get_start_of_month_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-
     // Get midnight
-    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).unwrap();
+    let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_start_of_month_timestamp()] Failed to create start_of_day_timestamp NaiveTime timestamp"),
+    ))?;
 
     // Get current datetime
     let now = Local::now();
@@ -221,19 +242,26 @@ fn get_start_of_month_timestamp() -> Result<i64> {
     let current_year = now.year();
     let current_month = now.month();
     let start_of_month = NaiveDate::from_ymd_opt(current_year, current_month, 1)
-        .unwrap()
+        .ok_or(Error::NaiveTimeError(String::from(
+            "[db::get_start_of_month_timestamp()] Failed to create start_of_month NaiveDate value",
+        )))?
         .and_time(start_of_day_timestamp);
 
-    let result = Local.from_local_datetime(&start_of_month).unwrap();
+    let result = Local
+        .from_local_datetime(&start_of_month)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+        "[db::get_start_of_month_timestamp()] Failed to parse start_of_month as DateTime<Local>",
+    )))?;
 
     Ok(result.timestamp())
 }
 
 fn get_end_of_month_timestamp() -> Result<i64> {
-    // TODO: Replace unwrap with error propagation!
-
     // Get midnight
-    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).unwrap();
+    let end_of_day_timestamp = NaiveTime::from_hms_opt(23, 59, 59).ok_or(Error::NaiveTimeError(
+        String::from("[db::get_end_of_month_timestamp()] Failed to create end_of_day_timestamp NaiveTime timestamp"),
+    ))?;
 
     // Get current datetime
     let now = Local::now();
@@ -245,19 +273,32 @@ fn get_end_of_month_timestamp() -> Result<i64> {
     // Wonky way to get the last day of the month (can this be improved?)
     let end_of_month = if current_month < 12 {
         NaiveDate::from_ymd_opt(current_year, current_month + 1, 1)
-            .unwrap()
+            .ok_or(Error::NaiveTimeError(String::from(
+                "[db::get_end_of_month_timestamp()] Failed to create end_of_month NaiveDate value",
+            )))?
             .pred_opt()
-            .unwrap()
+            .ok_or(Error::NaiveTimeError(String::from(
+                "[db::get_end_of_month_timestamp()] Failed to create end_of_month NaiveDate value",
+            )))?
             .and_time(end_of_day_timestamp)
     } else {
         NaiveDate::from_ymd_opt(current_year + 1, 1, 1)
-            .unwrap()
+            .ok_or(Error::NaiveTimeError(String::from(
+                "[db::get_end_of_month_timestamp()] Failed to create end_of_month NaiveDate value",
+            )))?
             .pred_opt()
-            .unwrap()
+            .ok_or(Error::NaiveTimeError(String::from(
+                "[db::get_end_of_month_timestamp()] Failed to create end_of_month NaiveDate value",
+            )))?
             .and_time(end_of_day_timestamp)
     };
 
-    let result = Local.from_local_datetime(&end_of_month).unwrap();
+    let result = Local
+        .from_local_datetime(&end_of_month)
+        .single()
+        .ok_or(Error::DateTimeError(String::from(
+            "[db::get_end_of_month_timestamp()] Failed to parse end_of_month as DateTime<Local>",
+        )))?;
 
     Ok(result.timestamp())
 }
