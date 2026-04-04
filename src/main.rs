@@ -11,6 +11,8 @@ use config::Config;
 use error::Result;
 use timer::TimerType;
 
+use crate::args::DisplayCommand;
+
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
     let config_path = config::get_config_path();
@@ -23,6 +25,8 @@ fn main() -> Result<()> {
                 db::save_session_to_db(start_time, end_time, TimerType::Work)?;
 
                 // Query long break table to get the most recent long break (within the same day?)
+                // What if there haven't been any long breaks today? Start the countdown anyway?
+                // Query the work sessions since the beginning of the day?
                 if config.pomodoros_to_long_break > 0 {
                     let latest_long_break = db::get_most_recent_session(TimerType::LongBreak)?;
                     match latest_long_break {
@@ -40,7 +44,19 @@ fn main() -> Result<()> {
                                 );
                             }
                         }
-                        None => print!("No long breaks taken today"),
+                        None => {
+                            let timespan = DisplayCommand::Day;
+                            let sessions = db::get_sessions(TimerType::Work, &Some(timespan))?;
+                            if sessions.len() >= config.pomodoros_to_long_break as usize {
+                                print!("You're due a long break!");
+                            } else {
+                                let delta = config.pomodoros_to_long_break - sessions.len() as u8;
+                                print!(
+                                    "You've got {} pomodoros before you're due a long break!",
+                                    delta
+                                );
+                            }
+                        }
                     }
                 }
             }
