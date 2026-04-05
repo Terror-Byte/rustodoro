@@ -90,27 +90,15 @@ pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u
 
     let mut statement = conn.prepare(query.as_str())?;
 
-    let session_iter = statement.query_map([], |row| {
+    // TODO: Don't need to return this as an option? Either that, or we use .optional() instead of
+    // ? to forceibly turn it into an option
+    let session = statement.query_row([], |row| {
         let start_time: u64 = row.get(0)?;
         let completion_time: u64 = row.get(1)?;
         Ok((start_time, completion_time))
     })?;
 
-    let mut session_vector: SessionVector = Vec::new();
-
-    for session in session_iter {
-        if let Ok((start_time, end_time)) = session {
-            session_vector.push((start_time, end_time))
-        }
-    }
-
-    // TODO: Is there a more elegant way to get just one result? Do we need the result vector?
-    if session_vector.len() > 0 {
-        let result = session_vector[0];
-        return Ok(Some(result));
-    } else {
-        return Ok(None);
-    }
+    Ok(Some(session))
 }
 
 fn get_sessions_internal(
@@ -132,21 +120,16 @@ fn get_sessions_internal(
 
     let mut statement = conn.prepare(query.as_str())?;
 
-    let session_iter = statement.query_map([], |row| {
-        let start_time: u64 = row.get(0)?;
-        let completion_time: u64 = row.get(1)?;
-        Ok((start_time, completion_time))
-    })?;
+    let sessions = statement
+        .query_map([], |row| {
+            let start_time: u64 = row.get(0)?;
+            let completion_time: u64 = row.get(1)?;
+            Ok((start_time, completion_time))
+        })?
+        .filter_map(|res| res.ok())
+        .collect();
 
-    let mut session_vector: SessionVector = Vec::new();
-
-    for session in session_iter {
-        if let Ok((start_time, end_time)) = session {
-            session_vector.push((start_time, end_time))
-        }
-    }
-
-    Ok(session_vector)
+    Ok(sessions)
 }
 
 fn get_todays_sessions(session_type: TimerType) -> Result<SessionVector> {
