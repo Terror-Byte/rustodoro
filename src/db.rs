@@ -1,6 +1,6 @@
 use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
 use directories::ProjectDirs;
-use rusqlite::Connection;
+use rusqlite::{Connection, OptionalExtension};
 use std::fs;
 use std::time::SystemTime;
 
@@ -90,15 +90,15 @@ pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u
 
     let mut statement = conn.prepare(query.as_str())?;
 
-    // TODO: Don't need to return this as an option? Either that, or we use .optional() instead of
-    // ? to forceibly turn it into an option
-    let session = statement.query_row([], |row| {
-        let start_time: u64 = row.get(0)?;
-        let completion_time: u64 = row.get(1)?;
-        Ok((start_time, completion_time))
-    })?;
+    let session = statement
+        .query_row([], |row| {
+            let start_time: u64 = row.get(0)?;
+            let completion_time: u64 = row.get(1)?;
+            Ok((start_time, completion_time))
+        })
+        .optional()?;
 
-    Ok(Some(session))
+    Ok(session)
 }
 
 fn get_sessions_internal(
