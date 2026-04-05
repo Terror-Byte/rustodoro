@@ -39,23 +39,6 @@ const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
 
 pub type SessionVector = Vec<(u64, u64)>;
 
-fn get_database_path() -> Result<String> {
-    if !cfg!(debug_assertions) {
-        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
-            if !proj_dirs.data_dir().exists() {
-                fs::create_dir(proj_dirs.data_dir())?;
-            }
-            if let Some(directory) = proj_dirs.data_dir().to_str() {
-                let mut dbpath = String::from(directory);
-                dbpath.push_str("/");
-                dbpath.push_str(DATABASE_NAME);
-                return Ok(dbpath);
-            }
-        }
-    }
-    Ok(String::from(RELATIVE_DB_PATH))
-}
-
 pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerType) -> Result<()> {
     let (create_table_query, insert_query) = match session_type {
         TimerType::Work => (CREATE_POMODORO_TABLE_QUERY, INSERT_POMODORO_QUERY),
@@ -74,6 +57,7 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     Ok(())
 }
 
+// Session Query Functions
 // TODO: Do we want to move the DisplayCommand type elsewhere and rename it?
 pub fn get_sessions(
     session_type: TimerType,
@@ -86,6 +70,47 @@ pub fn get_sessions(
             DisplayCommand::Month => get_months_sessions(session_type),
         },
         None => get_todays_sessions(session_type),
+    }
+}
+
+pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
+    let conn = Connection::open(get_database_path()?)?;
+
+    let start_timestamp = get_start_of_day_timestamp()?;
+    let end_timestamp = get_end_of_day_timestamp()?;
+
+    let table_name = match session_type {
+        TimerType::Work => POMODORO_TABLE_NAME,
+        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
+        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
+    };
+    let query = format!(
+        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {} ORDER BY start_time DESC LIMIT 1",
+        table_name, start_timestamp, end_timestamp
+    );
+
+    let mut statement = conn.prepare(query.as_str())?;
+
+    let session_iter = statement.query_map([], |row| {
+        let start_time: u64 = row.get(0)?;
+        let completion_time: u64 = row.get(1)?;
+        Ok((start_time, completion_time))
+    })?;
+
+    let mut session_vector: SessionVector = Vec::new();
+
+    for session in session_iter {
+        if let Ok((start_time, end_time)) = session {
+            session_vector.push((start_time, end_time))
+        }
+    }
+
+    // TODO: Is there a more elegant way to get just one result? Do we need the result vector?
+    if session_vector.len() > 0 {
+        let result = session_vector[0];
+        return Ok(Some(result));
+    } else {
+        return Ok(None);
     }
 }
 
@@ -149,7 +174,13 @@ fn get_months_sessions(session_type: TimerType) -> Result<SessionVector> {
     Ok(session_vector)
 }
 
-// Timing Stuff
+pub fn get_sessions_since(session_type: TimerType, start_timestamp: i64) -> Result<SessionVector> {
+    let end_timestamp = get_current_unix_time()? as i64;
+    let session_vector = get_sessions_internal(session_type, start_timestamp, end_timestamp)?;
+    Ok(session_vector)
+}
+
+// Timestamp Functions
 fn get_start_of_day_timestamp() -> Result<i64> {
     let start_of_day_timestamp = NaiveTime::from_hms_opt(0, 0, 0).ok_or(Error::NaiveTimeError(
         String::from("[db::get_start_of_day_timestamp()] Failed to create NaiveTime timestamp"),
@@ -307,51 +338,22 @@ fn get_end_of_month_timestamp() -> Result<i64> {
     Ok(result.timestamp())
 }
 
-pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
-    let conn = Connection::open(get_database_path()?)?;
-
-    let start_timestamp = get_start_of_day_timestamp()?;
-    let end_timestamp = get_end_of_day_timestamp()?;
-
-    let table_name = match session_type {
-        TimerType::Work => POMODORO_TABLE_NAME,
-        TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
-        TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
-    };
-    let query = format!(
-        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {} ORDER BY start_time DESC LIMIT 1",
-        table_name, start_timestamp, end_timestamp
-    );
-
-    let mut statement = conn.prepare(query.as_str())?;
-
-    let session_iter = statement.query_map([], |row| {
-        let start_time: u64 = row.get(0)?;
-        let completion_time: u64 = row.get(1)?;
-        Ok((start_time, completion_time))
-    })?;
-
-    let mut session_vector: SessionVector = Vec::new();
-
-    for session in session_iter {
-        if let Ok((start_time, end_time)) = session {
-            session_vector.push((start_time, end_time))
+// Utility Functions
+fn get_database_path() -> Result<String> {
+    if !cfg!(debug_assertions) {
+        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+            if !proj_dirs.data_dir().exists() {
+                fs::create_dir(proj_dirs.data_dir())?;
+            }
+            if let Some(directory) = proj_dirs.data_dir().to_str() {
+                let mut dbpath = String::from(directory);
+                dbpath.push_str("/");
+                dbpath.push_str(DATABASE_NAME);
+                return Ok(dbpath);
+            }
         }
     }
-
-    // TODO: Is there a more elegant way to get just one result? Do we need the result vector?
-    if session_vector.len() > 0 {
-        let result = session_vector[0];
-        return Ok(Some(result));
-    } else {
-        return Ok(None);
-    }
-}
-
-pub fn get_sessions_since(session_type: TimerType, start_timestamp: i64) -> Result<SessionVector> {
-    let end_timestamp = get_current_unix_time()? as i64;
-    let session_vector = get_sessions_internal(session_type, start_timestamp, end_timestamp)?;
-    Ok(session_vector)
+    Ok(String::from(RELATIVE_DB_PATH))
 }
 
 // TODO: This is a duplicate of the function in timer.rs, do we want to make that one public or
