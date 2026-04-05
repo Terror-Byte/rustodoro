@@ -49,7 +49,7 @@ fn main() -> Result<()> {
                     } else {
                         let delta = config.pomodoros_to_long_break - sessions.len() as u8;
                         print!(
-                            "You've got {} more pomodoros before you're due a long break!",
+                            "You've got {} more pomodoros to complete before you're due a long break!",
                             delta
                         );
                     }
