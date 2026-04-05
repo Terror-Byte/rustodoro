@@ -1,4 +1,4 @@
-use crate::args::DisplayCommand;
+use crate::args::TimeSpan;
 use crate::db::SessionVector;
 use crate::error::{Error, Result};
 use crate::timer::TimerType;
@@ -85,25 +85,19 @@ fn format_time(minutes: u16, seconds: u16) -> String {
 pub fn print_sessions(
     sessions: SessionVector,
     timer_type: TimerType,
-    timespan: Option<DisplayCommand>,
+    timespan: Option<TimeSpan>,
 ) -> Result<()> {
     match timespan {
-        Some(DisplayCommand::Day) => {
-            print_sessions_without_date(sessions, timer_type, DisplayCommand::Day)?
-        }
-        Some(DisplayCommand::Week) => {
-            print_sessions_with_date(sessions, timer_type, DisplayCommand::Week)?
-        }
-        Some(DisplayCommand::Month) => {
-            print_sessions_with_date(sessions, timer_type, DisplayCommand::Month)?
-        }
-        None => print_sessions_without_date(sessions, timer_type, DisplayCommand::Day)?,
+        Some(TimeSpan::Day) => print_sessions_without_date(sessions, timer_type, TimeSpan::Day)?,
+        Some(TimeSpan::Week) => print_sessions_with_date(sessions, timer_type, TimeSpan::Week)?,
+        Some(TimeSpan::Month) => print_sessions_with_date(sessions, timer_type, TimeSpan::Month)?,
+        None => print_sessions_without_date(sessions, timer_type, TimeSpan::Day)?,
     }
 
     Ok(())
 }
 
-fn print_summary_string(session_count: usize, session_type: TimerType, timespan: DisplayCommand) {
+fn print_summary_string(session_count: usize, session_type: TimerType, timespan: TimeSpan) {
     let session_name = match session_type {
         TimerType::Work => "pomodoro(s)",
         TimerType::ShortBreak => "short break(s)",
@@ -111,9 +105,9 @@ fn print_summary_string(session_count: usize, session_type: TimerType, timespan:
     };
 
     let timespan_string = match timespan {
-        DisplayCommand::Day => "today",
-        DisplayCommand::Week => "this week",
-        DisplayCommand::Month => "this month",
+        TimeSpan::Day => "today",
+        TimeSpan::Week => "this week",
+        TimeSpan::Month => "this month",
     };
 
     println!(
@@ -125,7 +119,7 @@ fn print_summary_string(session_count: usize, session_type: TimerType, timespan:
 fn print_sessions_without_date(
     sessions: SessionVector,
     session_type: TimerType,
-    timespan: DisplayCommand,
+    timespan: TimeSpan,
 ) -> Result<()> {
     print_summary_string(sessions.len(), session_type, timespan);
 
@@ -172,7 +166,7 @@ fn print_sessions_without_date(
 fn print_sessions_with_date(
     sessions: SessionVector,
     session_type: TimerType,
-    timespan: DisplayCommand,
+    timespan: TimeSpan,
 ) -> Result<()> {
     print_summary_string(sessions.len(), session_type, timespan);
 

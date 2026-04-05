@@ -4,7 +4,7 @@ use rusqlite::Connection;
 use std::fs;
 use std::time::SystemTime;
 
-use crate::args::DisplayCommand;
+use crate::args::TimeSpan;
 use crate::error::{Error, Result};
 use crate::timer::TimerType;
 
@@ -58,16 +58,15 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
 }
 
 // Session Query Functions
-// TODO: Do we want to move the DisplayCommand type elsewhere and rename it?
 pub fn get_sessions(
     session_type: TimerType,
-    timespan_opt: &Option<DisplayCommand>,
+    timespan_opt: &Option<TimeSpan>,
 ) -> Result<SessionVector> {
     match timespan_opt {
         Some(timespan) => match timespan {
-            DisplayCommand::Day => get_todays_sessions(session_type),
-            DisplayCommand::Week => get_weeks_sessions(session_type),
-            DisplayCommand::Month => get_months_sessions(session_type),
+            TimeSpan::Day => get_todays_sessions(session_type),
+            TimeSpan::Week => get_weeks_sessions(session_type),
+            TimeSpan::Month => get_months_sessions(session_type),
         },
         None => get_todays_sessions(session_type),
     }

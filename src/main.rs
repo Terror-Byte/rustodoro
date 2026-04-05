@@ -11,7 +11,7 @@ use config::Config;
 use error::Result;
 use timer::TimerType;
 
-use crate::args::DisplayCommand;
+use crate::args::TimeSpan;
 
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
@@ -38,7 +38,7 @@ fn main() -> Result<()> {
                             sessions
                         }
                         None => {
-                            let timespan = DisplayCommand::Day;
+                            let timespan = TimeSpan::Day;
                             let sessions = db::get_sessions(TimerType::Work, &Some(timespan))?;
                             sessions
                         }

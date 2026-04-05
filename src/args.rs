@@ -91,7 +91,7 @@ pub struct SetLogToDBArgs {
 }
 
 #[derive(Debug, Subcommand)]
-pub enum DisplayCommand {
+pub enum TimeSpan {
     Day,
     Week,
     Month,
@@ -100,19 +100,19 @@ pub enum DisplayCommand {
 #[derive(Debug, Args)]
 pub struct DisplayPomodorosArgs {
     #[command(subcommand)]
-    pub subcommand: Option<DisplayCommand>,
+    pub subcommand: Option<TimeSpan>,
 }
 
 #[derive(Debug, Args)]
 pub struct DisplayShortBreaksArgs {
     #[command(subcommand)]
-    pub subcommand: Option<DisplayCommand>,
+    pub subcommand: Option<TimeSpan>,
 }
 
 #[derive(Debug, Args)]
 pub struct DisplayLongBreaksArgs {
     #[command(subcommand)]
-    pub subcommand: Option<DisplayCommand>,
+    pub subcommand: Option<TimeSpan>,
 }
 
 impl ToSeconds for SetWorkTimeArgs {
