@@ -94,7 +94,7 @@ fn main() -> Result<()> {
             }
             let timer_type = TimerType::Work;
             let timespan = command.subcommand;
-            let sessions = db::get_sessions(timer_type, &timespan)?;
+            let sessions = db::get_sessions(timer_type, &timespan).unwrap_or(vec![]);
             display::print_sessions(sessions, timer_type, timespan)?;
         }
         RustodoroCommand::DisplayShortBreaks(command) => {
@@ -103,7 +103,7 @@ fn main() -> Result<()> {
             }
             let timer_type = TimerType::ShortBreak;
             let timespan = command.subcommand;
-            let sessions = db::get_sessions(timer_type, &timespan)?;
+            let sessions = db::get_sessions(timer_type, &timespan).unwrap_or(vec![]);
             display::print_sessions(sessions, timer_type, timespan)?;
         }
         RustodoroCommand::DisplayLongBreaks(command) => {
@@ -112,7 +112,7 @@ fn main() -> Result<()> {
             }
             let timer_type = TimerType::LongBreak;
             let timespan = command.subcommand;
-            let sessions = db::get_sessions(timer_type, &timespan)?;
+            let sessions = db::get_sessions(timer_type, &timespan).unwrap_or(vec![]);
             display::print_sessions(sessions, timer_type, timespan)?;
         }
     }
