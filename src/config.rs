@@ -1,10 +1,14 @@
 use crate::args::{
-    SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs, SetWorkTimeArgs,
-    ToSeconds,
+    SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs,
+    SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
+use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
 use std::fs;
+
+const CONFIG_NAME: &str = "config.toml";
+const RELATIVE_CONFIG_PATH: &str = "./config.toml";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
@@ -12,6 +16,8 @@ pub struct Config {
     pub short_break_time: u16,
     pub long_break_time: u16,
     pub pomodoros_to_long_break: u8,
+    #[serde(default)]
+    pub log_to_db: bool,
 }
 
 impl Config {
@@ -69,17 +75,18 @@ impl Config {
         })
     }
 
-    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Result<Config> {
-        if args.pomodoros_to_long_break == 0 {
-            return Err(Error::ConfigError(
-                "Cannot set 'pomodoros to long break' to 0!".to_string(),
-            ));
-        }
-
-        Ok(Config {
+    pub fn set_pomodoros_to_long_break(self, args: SetPomodorosToLongBreakArgs) -> Config {
+        Config {
             pomodoros_to_long_break: args.pomodoros_to_long_break,
             ..self
-        })
+        }
+    }
+
+    pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {
+        Config {
+            log_to_db: command.log_to_db,
+            ..self
+        }
     }
 }
 
@@ -90,6 +97,21 @@ impl Default for Config {
             short_break_time: 300,
             long_break_time: 900,
             pomodoros_to_long_break: 4,
+            log_to_db: false,
         }
     }
+}
+
+pub fn get_config_path() -> String {
+    if !cfg!(debug_assertions) {
+        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+            if let Some(directory) = proj_dirs.config_dir().to_str() {
+                let mut config_path = String::from(directory);
+                config_path.push_str("/");
+                config_path.push_str(CONFIG_NAME);
+                return config_path;
+            }
+        }
+    }
+    String::from(RELATIVE_CONFIG_PATH)
 }

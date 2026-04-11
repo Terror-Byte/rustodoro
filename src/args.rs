@@ -1,4 +1,4 @@
-use clap::{Args, Parser, Subcommand};
+use clap::{ArgAction, Args, Parser, Subcommand};
 
 pub trait ToSeconds {
     fn to_seconds(&self) -> u16; // TODO: Make this generic instead of a solid u16 type?
@@ -32,6 +32,18 @@ pub enum RustodoroCommand {
 
     /// Configure the amount of pomodoros (work stints) to complete for a long break
     SetPomodorosToLongBreak(SetPomodorosToLongBreakArgs),
+
+    /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
+    SetLogToDB(SetLogToDBArgs),
+
+    /// Display the pomodoros from today, this week or this month
+    DisplayPomodoros(DisplayPomodorosArgs),
+
+    /// Display the short breaks from today, this week or this month
+    DisplayShortBreaks(DisplayShortBreaksArgs),
+
+    /// Display the long breaks from today, this week or this month
+    DisplayLongBreaks(DisplayLongBreaksArgs),
 }
 
 #[derive(Debug, Args)]
@@ -70,6 +82,37 @@ pub struct SetLongBreakTimeArgs {
 #[derive(Debug, Args)]
 pub struct SetPomodorosToLongBreakArgs {
     pub pomodoros_to_long_break: u8,
+}
+
+#[derive(Debug, Args)]
+pub struct SetLogToDBArgs {
+    #[arg(action = ArgAction::Set)]
+    pub log_to_db: bool,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum TimeSpan {
+    Day,
+    Week,
+    Month,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayPomodorosArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<TimeSpan>,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayShortBreaksArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<TimeSpan>,
+}
+
+#[derive(Debug, Args)]
+pub struct DisplayLongBreaksArgs {
+    #[command(subcommand)]
+    pub subcommand: Option<TimeSpan>,
 }
 
 impl ToSeconds for SetWorkTimeArgs {
