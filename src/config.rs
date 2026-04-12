@@ -84,16 +84,16 @@ impl Config {
         }
     }
 
-    pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {
+    pub fn set_log_to_db(self, args: SetLogToDBArgs) -> Config {
         Config {
-            log_to_db: command.log_to_db,
+            log_to_db: args.log_to_db,
             ..self
         }
     }
 
-    pub fn set_desktop_notifications(self, command: SetDesktopNotificationsArgs) -> Config {
+    pub fn set_desktop_notifications(self, args: SetDesktopNotificationsArgs) -> Config {
         Config {
-            desktop_notifications: command.desktop_notifications,
+            desktop_notifications: args.desktop_notifications,
             ..self
         }
     }

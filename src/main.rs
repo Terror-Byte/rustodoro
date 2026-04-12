@@ -84,24 +84,24 @@ fn main() -> Result<()> {
                 db::save_session_to_db(start_time, end_time, TimerType::LongBreak)?;
             }
         }
-        RustodoroCommand::SetWorkTime(command) => {
-            let new_config = config.set_work_time(command)?;
+        RustodoroCommand::SetWorkTime(args) => {
+            let new_config = config.set_work_time(args)?;
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::SetShortBreakTime(command) => {
-            let new_config = config.set_short_break_time(command)?;
+        RustodoroCommand::SetShortBreakTime(args) => {
+            let new_config = config.set_short_break_time(args)?;
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::SetLongBreakTime(command) => {
-            let new_config = config.set_long_break_time(command)?;
+        RustodoroCommand::SetLongBreakTime(args) => {
+            let new_config = config.set_long_break_time(args)?;
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::SetPomodorosToLongBreak(command) => {
-            let new_config = config.set_pomodoros_to_long_break(command);
+        RustodoroCommand::SetPomodorosToLongBreak(args) => {
+            let new_config = config.set_pomodoros_to_long_break(args);
             Config::save(&new_config, config_path.as_str())?;
         }
-        RustodoroCommand::SetLogToDB(command) => {
-            let new_config = config.set_log_to_db(command);
+        RustodoroCommand::SetLogToDB(args) => {
+            let new_config = config.set_log_to_db(args);
             Config::save(&new_config, config_path.as_str())?;
         }
         RustodoroCommand::SetDesktopNotifications(args) => {
