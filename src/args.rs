@@ -5,6 +5,8 @@ pub trait ToSeconds {
 }
 
 #[derive(Debug, Parser)]
+#[command(version)]
+#[command(about = "A simple CLI pomodoro timer application")]
 pub struct RustodoroArgs {
     #[clap(subcommand)]
     pub command: RustodoroCommand,
