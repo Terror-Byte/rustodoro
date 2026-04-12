@@ -3,12 +3,14 @@ use crate::args::{
     SetShortBreakTimeArgs, SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
+#[cfg(all(not(debug_assertions), not(feature = "portable")))]
 use directories::ProjectDirs;
 use serde::{Deserialize, Serialize};
+#[cfg(any(debug_assertions, feature = "portable"))]
+use std::env;
 use std::fs;
 
 const CONFIG_NAME: &str = "config.toml";
-const RELATIVE_CONFIG_PATH: &str = "./config.toml";
 
 #[derive(Serialize, Deserialize, Debug, Clone, Copy)]
 pub struct Config {
@@ -112,16 +114,42 @@ impl Default for Config {
     }
 }
 
-pub fn get_config_path() -> String {
-    if !cfg!(debug_assertions) {
+#[cfg(all(not(debug_assertions), not(feature = "portable")))]
+pub fn get_config_path() -> Option<String> {
+    if !cfg!(debug_assertions) && !cfg!(feature = "portable") {
         if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
-            if let Some(directory) = proj_dirs.config_dir().to_str() {
-                let mut config_path = String::from(directory);
-                config_path.push_str("/");
-                config_path.push_str(CONFIG_NAME);
-                return config_path;
+            let mut config_dir = proj_dirs.config_dir().to_path_buf();
+            config_dir.push(CONFIG_NAME);
+            if let Some(config_path) = config_dir.to_str() {
+                return Some(config_path.to_string());
             }
         }
     }
-    String::from(RELATIVE_CONFIG_PATH)
+
+    None
+}
+
+#[cfg(all(not(debug_assertions), feature = "portable"))]
+pub fn get_config_path() -> Option<String> {
+    if let Ok(mut exe_dir) = env::current_exe() {
+        exe_dir.pop();
+        exe_dir.push(CONFIG_NAME);
+        if let Some(config_path) = exe_dir.to_str() {
+            return Some(config_path.to_string());
+        }
+    }
+
+    None
+}
+
+#[cfg(all(debug_assertions, not(feature = "portable")))]
+pub fn get_config_path() -> Option<String> {
+    if let Ok(mut pwd) = env::current_dir() {
+        pwd.push(CONFIG_NAME);
+        if let Some(config_path) = pwd.to_str() {
+            return Some(config_path.to_string());
+        }
+    }
+
+    None
 }
