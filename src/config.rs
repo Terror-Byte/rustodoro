@@ -1,6 +1,6 @@
 use crate::args::{
-    SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs,
-    SetWorkTimeArgs, ToSeconds,
+    SetDesktopNotificationsArgs, SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs,
+    SetShortBreakTimeArgs, SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
 use directories::ProjectDirs;
@@ -87,6 +87,13 @@ impl Config {
     pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {
         Config {
             log_to_db: command.log_to_db,
+            ..self
+        }
+    }
+
+    pub fn set_desktop_notifications(self, command: SetDesktopNotificationsArgs) -> Config {
+        Config {
+            desktop_notifications: command.desktop_notifications,
             ..self
         }
     }

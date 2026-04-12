@@ -104,6 +104,10 @@ fn main() -> Result<()> {
             let new_config = config.set_log_to_db(command);
             Config::save(&new_config, config_path.as_str())?;
         }
+        RustodoroCommand::SetDesktopNotifications(args) => {
+            let new_config = config.set_desktop_notifications(args);
+            Config::save(&new_config, config_path.as_str())?;
+        }
         RustodoroCommand::DisplayPomodoros(command) => {
             if !config.log_to_db {
                 println!("WARNING: Session logging is currently disabled, only displaying sessions completed whilst session logging enabled.\n");
