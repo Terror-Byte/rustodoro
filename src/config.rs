@@ -116,13 +116,11 @@ impl Default for Config {
 
 #[cfg(all(not(debug_assertions), not(feature = "portable")))]
 pub fn get_config_path() -> Option<String> {
-    if !cfg!(debug_assertions) && !cfg!(feature = "portable") {
-        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
-            let mut config_dir = proj_dirs.config_dir().to_path_buf();
-            config_dir.push(CONFIG_NAME);
-            if let Some(config_path) = config_dir.to_str() {
-                return Some(config_path.to_string());
-            }
+    if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+        let mut config_dir = proj_dirs.config_dir().to_path_buf();
+        config_dir.push(CONFIG_NAME);
+        if let Some(config_path) = config_dir.to_str() {
+            return Some(config_path.to_string());
         }
     }
 

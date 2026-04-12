@@ -1,6 +1,10 @@
 use chrono::{Datelike, Local, NaiveDate, NaiveTime, TimeZone, Weekday};
+#[cfg(all(not(debug_assertions), not(feature = "portable")))]
 use directories::ProjectDirs;
 use rusqlite::{Connection, OptionalExtension};
+#[cfg(any(debug_assertions, feature = "portable"))]
+use std::env;
+#[cfg(all(not(debug_assertions), not(feature = "portable")))]
 use std::fs;
 use std::time::SystemTime;
 
@@ -9,7 +13,6 @@ use crate::error::{Error, Result};
 use crate::timer::TimerType;
 
 const DATABASE_NAME: &str = "rustodoro.db";
-const RELATIVE_DB_PATH: &str = "./rustodoro.db";
 
 // Table creation queries
 const CREATE_POMODORO_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS pomodoros (
@@ -46,7 +49,12 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
         TimerType::LongBreak => (CREATE_LONG_BREAK_TABLE_QUERY, INSERT_LONG_BREAK_QUERY),
     };
 
-    let conn = Connection::open(get_database_path()?)?;
+    let conn = Connection::open(
+        get_database_path().ok_or(Error::PathError(
+            "Failed to get database path. Either it does not exist, or it could not be created"
+                .to_string(),
+        ))?,
+    )?;
 
     // Create table if it doesn't exist
     conn.execute(create_table_query, ())?;
@@ -73,7 +81,12 @@ pub fn get_sessions(
 }
 
 pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
-    let conn = Connection::open(get_database_path()?)?;
+    let conn = Connection::open(
+        get_database_path().ok_or(Error::PathError(
+            "Failed to get database path. Either it does not exist, or it could not be created"
+                .to_string(),
+        ))?,
+    )?;
 
     let start_timestamp = get_start_of_day_timestamp()?;
     let end_timestamp = get_end_of_day_timestamp()?;
@@ -106,7 +119,12 @@ fn get_sessions_internal(
     start_timestamp: i64,
     end_timestamp: i64,
 ) -> Result<SessionVector> {
-    let conn = Connection::open(get_database_path()?)?;
+    let conn = Connection::open(
+        get_database_path().ok_or(Error::PathError(
+            "Failed to get database path. Either it does not exist, or it could not be created"
+                .to_string(),
+        ))?,
+    )?;
 
     let table_name = match session_type {
         TimerType::Work => POMODORO_TABLE_NAME,
@@ -321,21 +339,50 @@ fn get_end_of_month_timestamp() -> Result<i64> {
 }
 
 // Utility Functions
-fn get_database_path() -> Result<String> {
-    if !cfg!(debug_assertions) {
-        if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
-            if !proj_dirs.data_dir().exists() {
-                fs::create_dir(proj_dirs.data_dir())?;
-            }
-            if let Some(directory) = proj_dirs.data_dir().to_str() {
-                let mut dbpath = String::from(directory);
-                dbpath.push_str("/");
-                dbpath.push_str(DATABASE_NAME);
-                return Ok(dbpath);
+#[cfg(all(not(debug_assertions), not(feature = "portable")))]
+// Don't really like how we're hiding the error in this, but how do we allow options and results?
+// Can we move the directory creation to a new function?
+fn get_database_path() -> Option<String> {
+    if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
+        if !proj_dirs.data_dir().exists() {
+            if let Err(_) = fs::create_dir(proj_dirs.data_dir()) {
+                return None;
             }
         }
+
+        let mut database_dir = proj_dirs.data_dir().to_path_buf();
+        database_dir.push(DATABASE_NAME);
+        if let Some(database_path) = database_dir.to_str() {
+            return Some(database_path.to_string());
+        }
     }
-    Ok(String::from(RELATIVE_DB_PATH))
+
+    None
+}
+
+#[cfg(all(not(debug_assertions), feature = "portable"))]
+fn get_database_path() -> Option<String> {
+    if let Ok(mut exe_dir) = env::current_exe() {
+        exe_dir.pop();
+        exe_dir.push(DATABASE_NAME);
+        if let Some(database_path) = exe_dir.to_str() {
+            return Some(database_path.to_string());
+        }
+    }
+
+    None
+}
+
+#[cfg(all(debug_assertions, not(feature = "portable")))]
+fn get_database_path() -> Option<String> {
+    if let Ok(mut pwd) = env::current_dir() {
+        pwd.push(DATABASE_NAME);
+        if let Some(database_path) = pwd.to_str() {
+            return Some(database_path.to_string());
+        }
+    }
+
+    None
 }
 
 // TODO: This is a duplicate of the function in timer.rs, do we want to make that one public or

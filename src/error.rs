@@ -12,6 +12,7 @@ pub enum Error {
     DateTimeError(String),
     NaiveTimeError(String),
     NotifyRustError(notify_rust::error::Error),
+    PathError(String),
 }
 
 impl fmt::Debug for Error {
@@ -26,6 +27,7 @@ impl fmt::Debug for Error {
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
             Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
             Error::NotifyRustError(e) => write!(f, "Notification Error - {}", e),
+            Error::PathError(e) => write!(f, "Path Error - {}", e),
         }
     }
 }
@@ -42,6 +44,7 @@ impl fmt::Display for Error {
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
             Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
             Error::NotifyRustError(e) => write!(f, "Notification Error - {}", e),
+            Error::PathError(e) => write!(f, "Path Error - {}", e),
         }
     }
 }
