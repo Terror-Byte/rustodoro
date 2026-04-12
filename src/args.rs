@@ -37,6 +37,9 @@ pub enum RustodoroCommand {
     /// Configure whether to log all pomodoros, short breaks and long breaks to a local SQLite database
     SetLogToDB(SetLogToDBArgs),
 
+    /// Configure whether to trigger desktop notifications when a session is completed
+    SetDesktopNotifications(SetDesktopNotificationsArgs),
+
     /// Display the pomodoros from today, this week or this month
     DisplayPomodoros(DisplayPomodorosArgs),
 
@@ -114,6 +117,12 @@ pub struct DisplayShortBreaksArgs {
 pub struct DisplayLongBreaksArgs {
     #[command(subcommand)]
     pub subcommand: Option<TimeSpan>,
+}
+
+#[derive(Debug, Args)]
+pub struct SetDesktopNotificationsArgs {
+    #[arg(action = ArgAction::Set)]
+    pub desktop_notifications: bool,
 }
 
 impl ToSeconds for SetWorkTimeArgs {

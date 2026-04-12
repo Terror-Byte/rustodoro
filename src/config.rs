@@ -1,6 +1,6 @@
 use crate::args::{
-    SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs, SetShortBreakTimeArgs,
-    SetWorkTimeArgs, ToSeconds,
+    SetDesktopNotificationsArgs, SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs,
+    SetShortBreakTimeArgs, SetWorkTimeArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
 use directories::ProjectDirs;
@@ -18,6 +18,8 @@ pub struct Config {
     pub pomodoros_to_long_break: u8,
     #[serde(default)]
     pub log_to_db: bool,
+    #[serde(default)]
+    pub desktop_notifications: bool,
 }
 
 impl Config {
@@ -82,9 +84,16 @@ impl Config {
         }
     }
 
-    pub fn set_log_to_db(self, command: SetLogToDBArgs) -> Config {
+    pub fn set_log_to_db(self, args: SetLogToDBArgs) -> Config {
         Config {
-            log_to_db: command.log_to_db,
+            log_to_db: args.log_to_db,
+            ..self
+        }
+    }
+
+    pub fn set_desktop_notifications(self, args: SetDesktopNotificationsArgs) -> Config {
+        Config {
+            desktop_notifications: args.desktop_notifications,
             ..self
         }
     }
@@ -98,6 +107,7 @@ impl Default for Config {
             long_break_time: 900,
             pomodoros_to_long_break: 4,
             log_to_db: false,
+            desktop_notifications: false,
         }
     }
 }
