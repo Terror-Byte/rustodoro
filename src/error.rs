@@ -11,6 +11,7 @@ pub enum Error {
     ConfigError(String),
     DateTimeError(String),
     NaiveTimeError(String),
+    NotifyRustError(notify_rust::error::Error),
 }
 
 impl fmt::Debug for Error {
@@ -24,6 +25,7 @@ impl fmt::Debug for Error {
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
             Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
+            Error::NotifyRustError(e) => write!(f, "Notification Error - {}", e),
         }
     }
 }
@@ -39,6 +41,7 @@ impl fmt::Display for Error {
             Error::ConfigError(msg) => write!(f, "Config Error - {}", msg),
             Error::DateTimeError(msg) => write!(f, "Date Time Parse Error - {}", msg),
             Error::NaiveTimeError(msg) => write!(f, "NaiveTime Error - {}", msg),
+            Error::NotifyRustError(e) => write!(f, "Notification Error - {}", e),
         }
     }
 }
@@ -83,5 +86,11 @@ impl From<std::time::SystemTimeError> for Error {
 impl From<rusqlite::Error> for Error {
     fn from(err: rusqlite::Error) -> Self {
         Error::SQLError(err)
+    }
+}
+
+impl From<notify_rust::error::Error> for Error {
+    fn from(err: notify_rust::error::Error) -> Self {
+        Error::NotifyRustError(err)
     }
 }

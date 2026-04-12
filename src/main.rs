@@ -58,8 +58,6 @@ fn main() -> Result<()> {
             }
 
             if config.desktop_notifications {
-                // TODO: Add support for notification's error type so we can do ? (that, or do we do
-                // nothing with the error?)
                 // Note - the icon() function is only supported on linux!
                 // Not sure why the notification isn't staying in the queue on KDE?
                 Notification::new()
@@ -68,8 +66,7 @@ fn main() -> Result<()> {
                     .icon("chronometer")
                     .appname("rustodoro")
                     .hint(Hint::Urgency(Urgency::Normal))
-                    .show()
-                    .unwrap();
+                    .show()?;
             }
         }
         RustodoroCommand::ShortBreak => {
