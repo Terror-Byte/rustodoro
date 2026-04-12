@@ -1,7 +1,12 @@
 [package]
 name = "rustodoro"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+description = "A simple CLI pomodoro timer application"
+repository = "https://github.com/Terror-Byte/rustodoro"
+keywords = ["pomodoro", "timer", "time-tracking", "productivity", "cli"]
+categories = ["command-line-utilities"]
+license = "GPL-3.0-or-later"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
