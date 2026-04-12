@@ -18,6 +18,8 @@ pub struct Config {
     pub pomodoros_to_long_break: u8,
     #[serde(default)]
     pub log_to_db: bool,
+    #[serde(default)]
+    pub desktop_notifications: bool,
 }
 
 impl Config {
@@ -98,6 +100,7 @@ impl Default for Config {
             long_break_time: 900,
             pomodoros_to_long_break: 4,
             log_to_db: false,
+            desktop_notifications: false,
         }
     }
 }

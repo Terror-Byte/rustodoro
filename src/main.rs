@@ -9,6 +9,7 @@ use args::{RustodoroArgs, RustodoroCommand};
 use clap::Parser;
 use config::Config;
 use error::Result;
+use notify_rust::{Hint, Notification, Urgency};
 use timer::TimerType;
 
 use crate::args::TimeSpan;
@@ -54,6 +55,21 @@ fn main() -> Result<()> {
                         );
                     }
                 }
+            }
+
+            if config.desktop_notifications {
+                // TODO: Add support for notification's error type so we can do ? (that, or do we do
+                // nothing with the error?)
+                // Note - the icon() function is only supported on linux!
+                // Not sure why the notification isn't staying in the queue on KDE?
+                Notification::new()
+                    .summary("rustodoro")
+                    .body("You've completed a work session")
+                    .icon("chronometer")
+                    .appname("rustodoro")
+                    .hint(Hint::Urgency(Urgency::Normal))
+                    .show()
+                    .unwrap();
             }
         }
         RustodoroCommand::ShortBreak => {
