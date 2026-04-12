@@ -56,15 +56,15 @@ fn main() -> Result<()> {
                     }
                 }
             }
-
             if config.desktop_notifications {
                 // Note - the icon() function is only supported on linux!
                 // Not sure why the notification isn't staying in the queue on KDE?
+                // TODO: Do we want to inform the user of whether they're due a long break in this?
                 Notification::new()
-                    .summary("rustodoro")
+                    .summary("Rustodoro")
                     .body("You've completed a work session")
                     .icon("chronometer")
-                    .appname("rustodoro")
+                    .appname("Rustodoro")
                     .hint(Hint::Urgency(Urgency::Normal))
                     .show()?;
             }
@@ -74,11 +74,33 @@ fn main() -> Result<()> {
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::ShortBreak)?;
             }
+            if config.desktop_notifications {
+                // Note - the icon() function is only supported on linux!
+                // Not sure why the notification isn't staying in the queue on KDE?
+                Notification::new()
+                    .summary("Rustodoro")
+                    .body("You've completed a short break")
+                    .icon("chronometer")
+                    .appname("Rustodoro")
+                    .hint(Hint::Urgency(Urgency::Normal))
+                    .show()?;
+            }
         }
         RustodoroCommand::LongBreak => {
             let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::LongBreak)?;
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::LongBreak)?;
+            }
+            if config.desktop_notifications {
+                // Note - the icon() function is only supported on linux!
+                // Not sure why the notification isn't staying in the queue on KDE?
+                Notification::new()
+                    .summary("Rustodoro")
+                    .body("You've completed a long break")
+                    .icon("chronometer")
+                    .appname("Rustodoro")
+                    .hint(Hint::Urgency(Urgency::Normal))
+                    .show()?;
             }
         }
         RustodoroCommand::SetWorkTime(args) => {
