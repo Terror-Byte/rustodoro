@@ -57,10 +57,9 @@ fn main() -> Result<()> {
                 }
             }
             if config.desktop_notifications {
-                // TODO: Do we want to inform the user of whether they're due a long break in this?
                 Notification::new()
                     .summary("Rustodoro")
-                    .body("You've completed a work session")
+                    .body("Your work session is complete")
                     .icon("chronometer")
                     .appname("Rustodoro")
                     .hint(Hint::Urgency(Urgency::Normal))
@@ -75,7 +74,7 @@ fn main() -> Result<()> {
             if config.desktop_notifications {
                 Notification::new()
                     .summary("Rustodoro")
-                    .body("You've completed a short break")
+                    .body("Your short break is complete")
                     .icon("chronometer")
                     .appname("Rustodoro")
                     .hint(Hint::Urgency(Urgency::Normal))
@@ -90,7 +89,7 @@ fn main() -> Result<()> {
             if config.desktop_notifications {
                 Notification::new()
                     .summary("Rustodoro")
-                    .body("You've completed a long break")
+                    .body("Your long break is complete")
                     .icon("chronometer")
                     .appname("Rustodoro")
                     .hint(Hint::Urgency(Urgency::Normal))
