@@ -340,8 +340,6 @@ fn get_end_of_month_timestamp() -> Result<i64> {
 
 // Utility Functions
 #[cfg(all(not(debug_assertions), not(feature = "portable")))]
-// Don't really like how we're hiding the error in this, but how do we allow options and results?
-// Can we move the directory creation to a new function?
 fn get_database_path() -> Option<String> {
     if let Some(proj_dirs) = ProjectDirs::from("com", "TerrorByte", "Rustodoro") {
         if !proj_dirs.data_dir().exists() {
