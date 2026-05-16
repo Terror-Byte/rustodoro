@@ -8,7 +8,7 @@ mod timer;
 use args::{RustodoroArgs, RustodoroCommand};
 use clap::Parser;
 use config::Config;
-use error::Result;
+use error::{Error, Result};
 use notify_rust::{Hint, Notification, Urgency};
 use timer::TimerType;
 
@@ -16,7 +16,8 @@ use crate::args::TimeSpan;
 
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
-    let config_path = config::get_config_path();
+    let config_path = config::get_config_path()
+        .ok_or(Error::PathError("Failed to get config path".to_string()))?;
     let config = Config::load(config_path.as_str())?;
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
