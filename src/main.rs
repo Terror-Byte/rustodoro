@@ -12,7 +12,7 @@ use error::{Error, Result};
 use notify_rust::{Hint, Notification, Urgency};
 use timer::TimerType;
 
-use crate::args::{TimeSpan, ToSeconds};
+use crate::args::{HasValue, TimeSpan, ToSeconds};
 
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?

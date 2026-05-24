@@ -4,6 +4,10 @@ pub trait ToSeconds {
     fn to_seconds(&self) -> u16; // TODO: Make this generic instead of a solid u16 type?
 }
 
+pub trait HasValue {
+    fn has_value(&self) -> bool;
+}
+
 #[derive(Debug, Parser)]
 #[command(version, about, long_about = None)]
 pub struct RustodoroArgs {
@@ -15,24 +19,24 @@ pub struct RustodoroArgs {
 pub enum RustodoroCommand {
     /// Start a work timer - If no arguments are passed, the work_time property from
     /// the config will be used
-    Work(TimerArgs),
+    Work(RunTimerArgs),
 
     /// Start a short break timer - If no arguments are passed, the short_break_time
     /// property from the config will be used
-    ShortBreak(TimerArgs),
+    ShortBreak(RunTimerArgs),
 
     /// Start a long break timer - If no arguments are passed, the long_break_time
     /// property from the config will be used
-    LongBreak(TimerArgs),
+    LongBreak(RunTimerArgs),
 
     /// Configure the work timer
-    SetWorkTime(SetWorkTimeArgs),
+    SetWorkTime(ConfigureTimerArgs),
 
     /// Configure the short break timer
-    SetShortBreakTime(SetShortBreakTimeArgs),
+    SetShortBreakTime(ConfigureTimerArgs),
 
     /// Configure the long break timer
-    SetLongBreakTime(SetLongBreakTimeArgs),
+    SetLongBreakTime(ConfigureTimerArgs),
 
     /// Configure the amount of pomodoros (work stints) to complete for a long break
     SetPomodorosToLongBreak(SetPomodorosToLongBreakArgs),
@@ -54,45 +58,23 @@ pub enum RustodoroCommand {
 }
 
 #[derive(Debug, Args)]
-pub struct TimerArgs {
-    /// Minutes component of the work timer
+pub struct RunTimerArgs {
+    /// Minutes component of the timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
-    /// Seconds component of the work timer
+    /// Seconds component of the timer
     #[arg(short, long)]
     pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
-pub struct SetWorkTimeArgs {
-    /// Minutes component of the work timer
+pub struct ConfigureTimerArgs {
+    /// Minutes component of the timer
     #[arg(short, long)]
     pub minutes: Option<u16>,
 
-    /// Seconds component of the work timer
-    #[arg(short, long)]
-    pub seconds: Option<u16>,
-}
-
-#[derive(Debug, Args)]
-pub struct SetShortBreakTimeArgs {
-    /// Minutes component of the short break timer
-    #[arg(short, long)]
-    pub minutes: Option<u16>,
-
-    /// Seconds component of the short break timer
-    #[arg(short, long)]
-    pub seconds: Option<u16>,
-}
-
-#[derive(Debug, Args)]
-pub struct SetLongBreakTimeArgs {
-    /// Minutes component of the long break timer
-    #[arg(short, long)]
-    pub minutes: Option<u16>,
-
-    /// Seconds component of the long break timer
+    /// Seconds component of the timer
     #[arg(short, long)]
     pub seconds: Option<u16>,
 }
@@ -139,13 +121,29 @@ pub struct SetDesktopNotificationsArgs {
     pub desktop_notifications: bool,
 }
 
-impl TimerArgs {
-    pub fn has_value(&self) -> bool {
+impl ToSeconds for RunTimerArgs {
+    fn to_seconds(&self) -> u16 {
+        let mut time_in_seconds: u16 = 0;
+
+        if let Some(minutes) = self.minutes {
+            time_in_seconds += minutes * 60;
+        }
+
+        if let Some(seconds) = self.seconds {
+            time_in_seconds += seconds;
+        }
+
+        time_in_seconds
+    }
+}
+
+impl HasValue for RunTimerArgs {
+    fn has_value(&self) -> bool {
         self.minutes.is_some() || self.seconds.is_some()
     }
 }
 
-impl ToSeconds for TimerArgs {
+impl ToSeconds for ConfigureTimerArgs {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
 
@@ -161,50 +159,8 @@ impl ToSeconds for TimerArgs {
     }
 }
 
-impl ToSeconds for SetWorkTimeArgs {
-    fn to_seconds(&self) -> u16 {
-        let mut time_in_seconds: u16 = 0;
-
-        if let Some(minutes) = self.minutes {
-            time_in_seconds += minutes * 60;
-        }
-
-        if let Some(seconds) = self.seconds {
-            time_in_seconds += seconds;
-        }
-
-        time_in_seconds
-    }
-}
-
-impl ToSeconds for SetShortBreakTimeArgs {
-    fn to_seconds(&self) -> u16 {
-        let mut time_in_seconds: u16 = 0;
-
-        if let Some(minutes) = self.minutes {
-            time_in_seconds += minutes * 60;
-        }
-
-        if let Some(seconds) = self.seconds {
-            time_in_seconds += seconds;
-        }
-
-        time_in_seconds
-    }
-}
-
-impl ToSeconds for SetLongBreakTimeArgs {
-    fn to_seconds(&self) -> u16 {
-        let mut time_in_seconds: u16 = 0;
-
-        if let Some(minutes) = self.minutes {
-            time_in_seconds += minutes * 60;
-        }
-
-        if let Some(seconds) = self.seconds {
-            time_in_seconds += seconds;
-        }
-
-        time_in_seconds
+impl HasValue for ConfigureTimerArgs {
+    fn has_value(&self) -> bool {
+        self.minutes.is_some() || self.seconds.is_some()
     }
 }

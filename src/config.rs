@@ -1,6 +1,6 @@
 use crate::args::{
-    SetDesktopNotificationsArgs, SetLogToDBArgs, SetLongBreakTimeArgs, SetPomodorosToLongBreakArgs,
-    SetShortBreakTimeArgs, SetWorkTimeArgs, ToSeconds,
+    ConfigureTimerArgs, HasValue, SetDesktopNotificationsArgs, SetLogToDBArgs,
+    SetPomodorosToLongBreakArgs, ToSeconds,
 };
 use crate::error::{Error, Result};
 #[cfg(all(not(debug_assertions), not(feature = "portable")))]
@@ -40,7 +40,13 @@ impl Config {
         Ok(Config::default())
     }
 
-    pub fn set_work_time(self, args: SetWorkTimeArgs) -> Result<Config> {
+    pub fn set_work_time(self, args: ConfigureTimerArgs) -> Result<Config> {
+        if !args.has_value() {
+            return Err(Error::ConfigError(
+                "No arguments have been passed".to_string(),
+            ));
+        }
+
         let work_time = args.to_seconds();
         if work_time == 0 {
             return Err(Error::ConfigError(
@@ -51,7 +57,13 @@ impl Config {
         Ok(Config { work_time, ..self })
     }
 
-    pub fn set_short_break_time(self, args: SetShortBreakTimeArgs) -> Result<Config> {
+    pub fn set_short_break_time(self, args: ConfigureTimerArgs) -> Result<Config> {
+        if !args.has_value() {
+            return Err(Error::ConfigError(
+                "No arguments have been passed".to_string(),
+            ));
+        }
+
         let short_break_time = args.to_seconds();
         if short_break_time == 0 {
             return Err(Error::ConfigError(
@@ -65,7 +77,13 @@ impl Config {
         })
     }
 
-    pub fn set_long_break_time(self, args: SetLongBreakTimeArgs) -> Result<Config> {
+    pub fn set_long_break_time(self, args: ConfigureTimerArgs) -> Result<Config> {
+        if !args.has_value() {
+            return Err(Error::ConfigError(
+                "No arguments have been passed".to_string(),
+            ));
+        }
+
         let long_break_time = args.to_seconds();
         if long_break_time == 0 {
             return Err(Error::ConfigError(
