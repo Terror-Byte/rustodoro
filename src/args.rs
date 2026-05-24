@@ -13,14 +13,17 @@ pub struct RustodoroArgs {
 
 #[derive(Debug, Subcommand)]
 pub enum RustodoroCommand {
-    /// Start a work timer
-    Work,
+    /// Start a work timer - If no arguments are passed, the work_time property from
+    /// the config will be used
+    Work(TimerArgs),
 
-    /// Start a short break timer
-    ShortBreak,
+    /// Start a short break timer - If no arguments are passed, the short_break_time
+    /// property from the config will be used
+    ShortBreak(TimerArgs),
 
-    /// Start a long break timer
-    LongBreak,
+    /// Start a long break timer - If no arguments are passed, the long_break_time
+    /// property from the config will be used
+    LongBreak(TimerArgs),
 
     /// Configure the work timer
     SetWorkTime(SetWorkTimeArgs),
@@ -48,6 +51,17 @@ pub enum RustodoroCommand {
 
     /// Display the long breaks from today, this week or this month
     DisplayLongBreaks(DisplayLongBreaksArgs),
+}
+
+#[derive(Debug, Args)]
+pub struct TimerArgs {
+    /// Minutes component of the work timer
+    #[arg(short, long)]
+    pub minutes: Option<u16>,
+
+    /// Seconds component of the work timer
+    #[arg(short, long)]
+    pub seconds: Option<u16>,
 }
 
 #[derive(Debug, Args)]
@@ -123,6 +137,28 @@ pub struct DisplayLongBreaksArgs {
 pub struct SetDesktopNotificationsArgs {
     #[arg(action = ArgAction::Set)]
     pub desktop_notifications: bool,
+}
+
+impl TimerArgs {
+    pub fn has_value(&self) -> bool {
+        self.minutes.is_some() || self.seconds.is_some()
+    }
+}
+
+impl ToSeconds for TimerArgs {
+    fn to_seconds(&self) -> u16 {
+        let mut time_in_seconds: u16 = 0;
+
+        if let Some(minutes) = self.minutes {
+            time_in_seconds += minutes * 60;
+        }
+
+        if let Some(seconds) = self.seconds {
+            time_in_seconds += seconds;
+        }
+
+        time_in_seconds
+    }
 }
 
 impl ToSeconds for SetWorkTimeArgs {

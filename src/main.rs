@@ -12,7 +12,7 @@ use error::{Error, Result};
 use notify_rust::{Hint, Notification, Urgency};
 use timer::TimerType;
 
-use crate::args::TimeSpan;
+use crate::args::{TimeSpan, ToSeconds};
 
 fn main() -> Result<()> {
     // TODO: For the commands where we're modifying the config, what sort of user feedback do we want to let the user know the command executed successfully?
@@ -21,8 +21,14 @@ fn main() -> Result<()> {
     let config = Config::load(config_path.as_str())?;
     let args: RustodoroArgs = RustodoroArgs::parse();
     match args.command {
-        RustodoroCommand::Work => {
-            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::Work)?;
+        RustodoroCommand::Work(args) => {
+            let work_time = if args.has_value() {
+                args.to_seconds()
+            } else {
+                config.work_time
+            };
+
+            let (start_time, end_time) = timer::run_timer(work_time, TimerType::Work)?;
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::Work)?;
 
@@ -67,8 +73,14 @@ fn main() -> Result<()> {
                     .show()?;
             }
         }
-        RustodoroCommand::ShortBreak => {
-            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::ShortBreak)?;
+        RustodoroCommand::ShortBreak(args) => {
+            let short_break_time = if args.has_value() {
+                args.to_seconds()
+            } else {
+                config.short_break_time
+            };
+
+            let (start_time, end_time) = timer::run_timer(short_break_time, TimerType::ShortBreak)?;
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::ShortBreak)?;
             }
@@ -82,8 +94,14 @@ fn main() -> Result<()> {
                     .show()?;
             }
         }
-        RustodoroCommand::LongBreak => {
-            let (start_time, end_time) = timer::run_timer(config.work_time, TimerType::LongBreak)?;
+        RustodoroCommand::LongBreak(args) => {
+            let long_break_time = if args.has_value() {
+                args.to_seconds()
+            } else {
+                config.long_break_time
+            };
+
+            let (start_time, end_time) = timer::run_timer(long_break_time, TimerType::LongBreak)?;
             if config.log_to_db {
                 db::save_session_to_db(start_time, end_time, TimerType::LongBreak)?;
             }
