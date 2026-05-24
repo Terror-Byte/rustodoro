@@ -1,7 +1,7 @@
 use clap::{ArgAction, Args, Parser, Subcommand};
 
 pub trait ToSeconds {
-    fn to_seconds(&self) -> u16; // TODO: Make this generic instead of a solid u16 type?
+    fn to_seconds(&self) -> u16;
 }
 
 pub trait HasValue {
@@ -137,12 +137,6 @@ impl ToSeconds for RunTimerArgs {
     }
 }
 
-impl HasValue for RunTimerArgs {
-    fn has_value(&self) -> bool {
-        self.minutes.is_some() || self.seconds.is_some()
-    }
-}
-
 impl ToSeconds for ConfigureTimerArgs {
     fn to_seconds(&self) -> u16 {
         let mut time_in_seconds: u16 = 0;
@@ -156,6 +150,12 @@ impl ToSeconds for ConfigureTimerArgs {
         }
 
         time_in_seconds
+    }
+}
+
+impl HasValue for RunTimerArgs {
+    fn has_value(&self) -> bool {
+        self.minutes.is_some() || self.seconds.is_some()
     }
 }
 
