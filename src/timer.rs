@@ -1,15 +1,14 @@
 use crate::display;
 use crate::error::Result;
 use crossterm::{
-    cursor,
     event::{
         poll, read, Event, KeyCode, KeyModifiers, KeyboardEnhancementFlags,
         PopKeyboardEnhancementFlags, PushKeyboardEnhancementFlags,
     },
-    execute, queue, style,
+    execute,
     terminal::{disable_raw_mode, enable_raw_mode},
 };
-use std::io::{stdout, Write};
+use std::io::stdout;
 use std::time::{Duration, Instant, SystemTime};
 
 #[derive(Copy, Clone)]
@@ -53,9 +52,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
 
                         if is_paused {
                             pause_start = Instant::now();
-                            // TODO: Move this over to the display module?
-                            queue!(stdout, cursor::MoveToNextLine(1), style::Print("Paused!"))?;
-                            stdout.flush()?;
+                            display::print_paused_text()?;
                         } else {
                             unpaused_this_frame = true;
                             let pause_duration = pause_start.elapsed().as_secs();

@@ -61,6 +61,14 @@ pub fn print_time_remaining(
     Ok(())
 }
 
+pub fn print_paused_text() -> Result<()> {
+    let mut stdout = stdout();
+    queue!(stdout, cursor::MoveToNextLine(1), style::Print("Paused!"))?;
+    stdout.flush()?;
+
+    Ok(())
+}
+
 pub fn print_timer_elapsed() -> Result<()> {
     let mut stdout = stdout();
     queue!(
