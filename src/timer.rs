@@ -22,6 +22,8 @@ pub enum TimerType {
 pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
     enable_raw_mode()?;
     let mut stdout = stdout();
+    // TODO: Not sure if we need DISAMBIGUATE_ESCAPE_CODES and REPORT_ALL_KEYS_AS_ESCAPE_CODES, but
+    // we'll keep them both for now
     execute!(
         stdout,
         PushKeyboardEnhancementFlags(
@@ -35,17 +37,18 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
     let start = Instant::now();
     display::print_time_remaining(time, time, timer_type)?;
 
-    let mut is_paused = false;
-    let mut pause_start = Instant::now(); // TODO: Explain why we're getting the current instant
-    let mut overall_paused_time: u64 = 0;
-
     let mut old_printed_value: u16 = 0;
+
+    let mut is_paused = false;
+    let mut unpaused_this_frame = false;
+    let mut pause_start = Instant::now();
+    let mut time_spent_paused: u64 = 0;
+
     loop {
         if poll(Duration::from_millis(100))? {
             match read()? {
                 Event::Key(key) => {
-                    // TODO: How do we debounce this input?
-                    if key.code == KeyCode::Char(' ') {
+                    if key.code == KeyCode::Char(' ') && key.is_press() {
                         is_paused = !is_paused;
 
                         if is_paused {
@@ -54,8 +57,9 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
                             queue!(stdout, cursor::MoveToNextLine(1), style::Print("Paused!"))?;
                             stdout.flush()?;
                         } else {
+                            unpaused_this_frame = true;
                             let pause_duration = pause_start.elapsed().as_secs();
-                            overall_paused_time += pause_duration;
+                            time_spent_paused += pause_duration;
                         }
                     } else if key.code == KeyCode::Esc
                         || (key.code == KeyCode::Char('c')
@@ -69,12 +73,13 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
         }
 
         if !is_paused {
-            let elapsed_seconds = (start.elapsed().as_secs() - overall_paused_time) as u16;
+            let elapsed_seconds = (start.elapsed().as_secs() - time_spent_paused) as u16;
 
-            if elapsed_seconds > old_printed_value {
+            if elapsed_seconds > old_printed_value || unpaused_this_frame {
                 let time_remaining = time - elapsed_seconds;
                 display::print_time_remaining(time_remaining, time, timer_type)?;
                 old_printed_value = elapsed_seconds;
+                unpaused_this_frame = false;
             }
 
             if elapsed_seconds >= time {
