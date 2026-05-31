@@ -19,10 +19,9 @@ pub enum TimerType {
 }
 
 pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
+    // Set up crossterm input handling, to allow users to pause/unpause the timer
     enable_raw_mode()?;
     let mut stdout = stdout();
-    // TODO: Not sure if we need DISAMBIGUATE_ESCAPE_CODES and REPORT_ALL_KEYS_AS_ESCAPE_CODES, but
-    // we'll keep them both for now
     execute!(
         stdout,
         PushKeyboardEnhancementFlags(
@@ -84,12 +83,13 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
             }
         }
     }
+
     let end_timestamp = get_current_unix_time()?;
 
     crate::display::print_timer_elapsed()?;
 
-    disable_raw_mode()?;
     execute!(stdout, PopKeyboardEnhancementFlags)?;
+    disable_raw_mode()?;
 
     Ok((start_timestamp, end_timestamp))
 }
