@@ -164,16 +164,19 @@ fn print_sessions_without_date(
 
     // TODO: Find a library to print this as a nice table? Can I use crossterm?
     println!(
-        "| {:^10} | {:^10} | {:^10} |",
-        "session", "start time", "end time"
+        "| {:^10} | {:^10} | {:^10} | {:^20} |",
+        "session", "start time", "end time", "comment"
     );
     println!(
-        "| {} | {} | {} |",
+        "| {} | {} | {} | {} |",
         "-".repeat(10),
         "-".repeat(10),
-        "-".repeat(10)
+        "-".repeat(10),
+        "-".repeat(20)
     );
 
+    // TODO: Can we do an initial loop over the result and check what the longest comment is
+    // we can then use that to dynamically resize the table
     let mut i = 1;
     for session in sessions {
         let start_time: DateTime<Local> =
@@ -191,10 +194,11 @@ fn print_sessions_without_date(
                     "Failed to parse timestamp as a valid datetime!",
                 )))?;
         println!(
-            "| {:^10} | {:^10} | {:^10} |",
+            "| {:^10} | {:^10} | {:^10} | {:^20} |",
             i,
             start_time.format("%H:%M:%S"),
-            end_time.format("%H:%M:%S")
+            end_time.format("%H:%M:%S"),
+            session.2,
         );
         i += 1;
     }

@@ -66,6 +66,9 @@ pub struct RunTimerArgs {
     /// Seconds component of the timer
     #[arg(short, long)]
     pub seconds: Option<u16>,
+
+    #[arg(short, long)]
+    pub comment: Option<String>,
 }
 
 #[derive(Debug, Args)]

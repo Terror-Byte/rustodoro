@@ -17,32 +17,40 @@ const DATABASE_NAME: &str = "rustodoro.db";
 // Table creation queries
 const CREATE_POMODORO_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS pomodoros (
             start_time INTEGER PRIMARY KEY,
-            completion_time INTEGER NOT NULL
+            completion_time INTEGER NOT NULL,
+            comment TEXT
     )";
 const CREATE_SHORT_BREAK_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS short_breaks (
             start_time INTEGER PRIMARY KEY,
-            completion_time INTEGER NOT NULL
+            completion_time INTEGER NOT NULL,
+            comment TEXT
     )";
 const CREATE_LONG_BREAK_TABLE_QUERY: &str = "CREATE TABLE IF NOT EXISTS long_breaks (
             start_time INTEGER PRIMARY KEY,
-            completion_time INTEGER NOT NULL
+            completion_time INTEGER NOT NULL,
+            comment TEXT
     )";
 
 // Table insertion queries
 const INSERT_POMODORO_QUERY: &str =
-    "INSERT INTO pomodoros (start_time, completion_time) VALUES (?1, ?2)";
+    "INSERT INTO pomodoros (start_time, completion_time, comment) VALUES (?1, ?2, ?3)";
 const INSERT_SHORT_BREAK_QUERY: &str =
-    "INSERT INTO short_breaks (start_time, completion_time) VALUES (?1, ?2)";
+    "INSERT INTO short_breaks (start_time, completion_time, comment) VALUES (?1, ?2, ?3)";
 const INSERT_LONG_BREAK_QUERY: &str =
-    "INSERT INTO long_breaks (start_time, completion_time) VALUES (?1, ?2)";
+    "INSERT INTO long_breaks (start_time, completion_time, comment) VALUES (?1, ?2, ?3)";
 
 const POMODORO_TABLE_NAME: &str = "pomodoros";
 const SHORT_BREAK_TABLE_NAME: &str = "short_breaks";
 const LONG_BREAK_TABLE_NAME: &str = "long_breaks";
 
-pub type SessionVector = Vec<(u64, u64)>;
+pub type SessionVector = Vec<(u64, u64, String)>;
 
-pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerType) -> Result<()> {
+pub fn save_session_to_db(
+    start_time: u64,
+    end_time: u64,
+    comment: String,
+    session_type: TimerType,
+) -> Result<()> {
     let (create_table_query, insert_query) = match session_type {
         TimerType::Work => (CREATE_POMODORO_TABLE_QUERY, INSERT_POMODORO_QUERY),
         TimerType::ShortBreak => (CREATE_SHORT_BREAK_TABLE_QUERY, INSERT_SHORT_BREAK_QUERY),
@@ -60,7 +68,7 @@ pub fn save_session_to_db(start_time: u64, end_time: u64, session_type: TimerTyp
     conn.execute(create_table_query, ())?;
 
     // Insert new value into table
-    conn.execute(insert_query, (start_time, end_time))?;
+    conn.execute(insert_query, (start_time, end_time, comment))?;
 
     Ok(())
 }
@@ -80,7 +88,7 @@ pub fn get_sessions(
     }
 }
 
-pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64)>> {
+pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u64, String)>> {
     let conn = Connection::open(
         get_database_path().ok_or(Error::PathError(
             "Failed to get database path. Either it does not exist, or it could not be created"
@@ -96,8 +104,9 @@ pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u
         TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
         TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
     };
+    // TODO: Should this query be made into a const?
     let query = format!(
-        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {} ORDER BY start_time DESC LIMIT 1",
+        "SELECT start_time, completion_time, comment FROM {} WHERE start_time BETWEEN {} AND {} ORDER BY start_time DESC LIMIT 1",
         table_name, start_timestamp, end_timestamp
     );
 
@@ -107,7 +116,8 @@ pub fn get_most_recent_session(session_type: TimerType) -> Result<Option<(u64, u
         .query_row([], |row| {
             let start_time: u64 = row.get(0)?;
             let completion_time: u64 = row.get(1)?;
-            Ok((start_time, completion_time))
+            let comment: String = row.get(2)?;
+            Ok((start_time, completion_time, comment))
         })
         .optional()?;
 
@@ -131,8 +141,9 @@ fn get_sessions_internal(
         TimerType::ShortBreak => SHORT_BREAK_TABLE_NAME,
         TimerType::LongBreak => LONG_BREAK_TABLE_NAME,
     };
+    // TODO: Should this query be made into a const?
     let query = format!(
-        "SELECT start_time, completion_time FROM {} WHERE start_time BETWEEN {} AND {}",
+        "SELECT start_time, completion_time, comment FROM {} WHERE start_time BETWEEN {} AND {}",
         table_name, start_timestamp, end_timestamp
     );
 
@@ -142,7 +153,8 @@ fn get_sessions_internal(
         .query_map([], |row| {
             let start_time: u64 = row.get(0)?;
             let completion_time: u64 = row.get(1)?;
-            Ok((start_time, completion_time))
+            let comment: String = row.get(2)?;
+            Ok((start_time, completion_time, comment))
         })?
         .filter_map(|res| res.ok())
         .collect();

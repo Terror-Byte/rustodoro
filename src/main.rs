@@ -30,7 +30,11 @@ fn main() -> Result<()> {
 
             let (start_time, end_time) = timer::run_timer(work_time, TimerType::Work)?;
             if config.log_to_db {
-                db::save_session_to_db(start_time, end_time, TimerType::Work)?;
+                let comment = match args.comment {
+                    Some(comment) => comment,
+                    None => "".to_string(),
+                };
+                db::save_session_to_db(start_time, end_time, comment.to_string(), TimerType::Work)?;
 
                 // If the amount of pomodoros completed since the last long break (or since the
                 // start of the day, if no long breaks have been taken yet) is equal to or greater
@@ -82,7 +86,12 @@ fn main() -> Result<()> {
 
             let (start_time, end_time) = timer::run_timer(short_break_time, TimerType::ShortBreak)?;
             if config.log_to_db {
-                db::save_session_to_db(start_time, end_time, TimerType::ShortBreak)?;
+                db::save_session_to_db(
+                    start_time,
+                    end_time,
+                    "".to_string(),
+                    TimerType::ShortBreak,
+                )?;
             }
             if config.desktop_notifications {
                 Notification::new()
@@ -103,7 +112,7 @@ fn main() -> Result<()> {
 
             let (start_time, end_time) = timer::run_timer(long_break_time, TimerType::LongBreak)?;
             if config.log_to_db {
-                db::save_session_to_db(start_time, end_time, TimerType::LongBreak)?;
+                db::save_session_to_db(start_time, end_time, "".to_string(), TimerType::LongBreak)?;
             }
             if config.desktop_notifications {
                 Notification::new()
