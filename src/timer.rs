@@ -34,6 +34,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
     let start_timestamp = get_current_unix_time()?;
     let start = Instant::now();
     display::print_time_remaining(time, time, timer_type)?;
+    display::print_hotkeys()?;
 
     let mut old_printed_value: u16 = 0;
 
@@ -51,7 +52,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
 
                         if is_paused {
                             pause_start = Instant::now();
-                            display::print_paused_text()?;
+                            display::print_paused_text(timer_type)?;
                         } else {
                             unpaused_this_frame = true;
                             let pause_duration = pause_start.elapsed().as_secs();
@@ -74,6 +75,7 @@ pub fn run_timer(time: u16, timer_type: TimerType) -> Result<(u64, u64)> {
             if elapsed_seconds > old_printed_value || unpaused_this_frame {
                 let time_remaining = time - elapsed_seconds;
                 display::print_time_remaining(time_remaining, time, timer_type)?;
+                display::print_hotkeys()?;
                 old_printed_value = elapsed_seconds;
                 unpaused_this_frame = false;
             }
