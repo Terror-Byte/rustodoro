@@ -10,6 +10,10 @@ use crossterm::{
 };
 use std::io::{stdout, Write};
 
+const WORK_TIMER_TITLE: &str = "Work Timer";
+const SHORT_BREAK_TIMER_TITLE: &str = "Short Break Timer";
+const LONG_BREAK_TIMER_TITLE: &str = "Long Break Timer";
+
 // TODO: Put this in a submodule called timer?
 pub fn print_time_remaining(
     time_remaining: u16,
@@ -34,9 +38,9 @@ pub fn print_time_remaining(
     }
 
     let header = match timer_type {
-        TimerType::Work => String::from("Work Timer"),
-        TimerType::ShortBreak => String::from("Short Break Timer"),
-        TimerType::LongBreak => String::from("Long Break Timer"),
+        TimerType::Work => String::from(WORK_TIMER_TITLE),
+        TimerType::ShortBreak => String::from(SHORT_BREAK_TIMER_TITLE),
+        TimerType::LongBreak => String::from(LONG_BREAK_TIMER_TITLE),
     };
 
     let minutes_component = time_remaining / 60;
@@ -61,6 +65,40 @@ pub fn print_time_remaining(
     Ok(())
 }
 
+pub fn print_paused_text(timer_type: TimerType) -> Result<()> {
+    let title_length = match timer_type {
+        TimerType::Work => WORK_TIMER_TITLE.len(),
+        TimerType::ShortBreak => SHORT_BREAK_TIMER_TITLE.len(),
+        TimerType::LongBreak => LONG_BREAK_TIMER_TITLE.len(),
+    } as u16;
+
+    let mut stdout = stdout();
+    queue!(
+        stdout,
+        cursor::MoveTo(title_length, 0),
+        style::Print(" - Paused!")
+    )?;
+    stdout.flush()?;
+
+    Ok(())
+}
+
+pub fn print_hotkeys() -> Result<()> {
+    let mut stdout = stdout();
+    queue!(
+        stdout,
+        cursor::MoveTo(0, 4),
+        Clear(ClearType::FromCursorDown),
+        cursor::Hide,
+        style::PrintStyledContent(
+            "Space - Pause/Unpause, Esc/Ctrl + C - Quit".with(Color::DarkGrey)
+        )
+    )?;
+    stdout.flush()?;
+
+    Ok(())
+}
+
 pub fn print_timer_elapsed() -> Result<()> {
     let mut stdout = stdout();
     queue!(
@@ -70,6 +108,7 @@ pub fn print_timer_elapsed() -> Result<()> {
         cursor::MoveToNextLine(1),
         cursor::Show
     )?;
+    stdout.flush()?;
 
     Ok(())
 }
